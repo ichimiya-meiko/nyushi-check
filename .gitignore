@@ -1,0 +1,21 @@
+# 問題画像・スキャン・答えのデータ（著作権のため、GitHub に入れない）
+reference/
+images/
+data/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.pdf
+*.csv
+*.zip
+index_v*.html
+
+# clasp のログイン情報・設定（入れない）
+.clasprc.json
+.clasp.json
+
+# OS が作るファイル
+.DS_Store
+Thumbs.db
+desktop.ini

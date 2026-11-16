@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>入試問題チェック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" onload="window.render&&render()"></script>
+<style>
+:root{
+  --bg:#EEF2F6; --paper:#FFFFFF; --ink:#1C2740; --sub:#5A6680; --line:#CDD5E1; --focus:#2F6FDB; --soft:#F5F7FA;
+  --ok:#1F8A5B; --ok-bg:#E3F4EC; --mid:#B88600; --mid-bg:#FFF4CC; --ng:#D33A3A; --ng-bg:#FDE6E6; --none:#8A94A6; --none-bg:#ECEFF3;
+  --accent:#2F6FDB; --accent-ink:#FFFFFF; --home:#C2410C; --ai:#6D28D9; --ai-bg:#F3EEFF;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111722; --paper:#1A2230; --ink:#E6EBF3; --sub:#9AA6BC; --line:#334058; --focus:#7FA8F5; --soft:#202A3A;
+    --ok:#4CC38A; --ok-bg:#16342A; --mid:#E3B83B; --mid-bg:#3A3015; --ng:#FF6B6B; --ng-bg:#3D1C1F; --none:#8090A8; --none-bg:#263043;
+    --accent:#6E9BF2; --accent-ink:#0E1420; --home:#FB923C; --ai:#B794F6; --ai-bg:#2A2140;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111722; --paper:#1A2230; --ink:#E6EBF3; --sub:#9AA6BC; --line:#334058; --focus:#7FA8F5; --soft:#202A3A;
+  --ok:#4CC38A; --ok-bg:#16342A; --mid:#E3B83B; --mid-bg:#3A3015; --ng:#FF6B6B; --ng-bg:#3D1C1F; --none:#8090A8; --none-bg:#263043;
+  --accent:#6E9BF2; --accent-ink:#0E1420; --home:#FB923C; --ai:#B794F6; --ai-bg:#2A2140;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Meiryo",sans-serif;font-size:17px;line-height:1.6;-webkit-text-size-adjust:100%;min-height:100vh;display:flex;flex-direction:column}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+header{background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.hin{max-width:960px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{font-weight:700;font-size:18px;line-height:1.2}
+.brand small{display:block;font-size:12px;color:var(--sub);font-weight:500}
+.hright{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--sub)}
+main{flex:1;width:100%;max-width:960px;margin:0 auto;padding:16px 16px 24px}
+footer{border-top:1px solid var(--line);background:var(--paper);color:var(--sub);font-size:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));text-align:center}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stack>*+*{margin-top:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-weight:500}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.small{min-height:36px;padding:4px 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.lnk{background:none;border:none;color:var(--accent);padding:8px 4px;min-height:44px;font-weight:500}
+label.f{display:block;font-size:14px;color:var(--sub);margin-bottom:4px}
+input.t,textarea.t{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--paper);font-size:18px}
+textarea.t{min-height:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;line-height:1.5}
+.err{background:var(--ng-bg);color:var(--ng);border-radius:10px;padding:10px 12px;white-space:pre-wrap;font-size:15px}
+.note{background:var(--ok-bg);color:var(--ok);border-radius:10px;padding:10px 12px;font-size:15px}
+.warn{background:var(--mid-bg);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:14px;white-space:pre-wrap}
+.muted{color:var(--sub);font-size:14px}
+h1{font-size:22px;margin:0}
+h2{font-size:18px;margin:0}
+.crumb{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--sub)}
+.crumb button{background:none;border:none;color:var(--accent);padding:6px 2px;min-height:36px;font-weight:500}
+.seg{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;min-height:44px;border:none;border-radius:9px;background:none;font-weight:500;color:var(--sub)}
+.seg button[aria-pressed="true"]{background:var(--paper);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.login{max-width:440px;margin:24px auto}
+.j-ok{--c:var(--ok);--cb:var(--ok-bg)} .j-mid{--c:var(--mid);--cb:var(--mid-bg)} .j-ng{--c:var(--ng);--cb:var(--ng-bg)} .j-none{--c:var(--none);--cb:var(--none-bg)}
+.sum{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;background:var(--cb);color:var(--c);font-weight:700;font-size:14px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.pcard{text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-height:88px;display:flex;flex-direction:column;gap:6px}
+.pcard.home{border:2px solid var(--home)}
+.pcard .nm{font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:12px;background:var(--home);color:#fff;border-radius:999px;padding:1px 8px;font-weight:700}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--none-bg)}
+.bar i{display:block;height:100%}
+.bar .b-ok{background:var(--ok)} .bar .b-mid{background:var(--mid)} .bar .b-ng{background:var(--ng)}
+.dots{display:flex;gap:3px;flex-wrap:wrap}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--cb);border:2px solid var(--c)}
+/* 問題用紙 */
+.sheethead{position:sticky;top:57px;z-index:4;background:var(--bg);padding:8px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.sheethead .ttl{font-weight:700;font-size:19px}
+.timer{margin-left:auto;display:flex;align-items:center;gap:6px}
+.timer .tv{font-variant-numeric:tabular-nums;font-weight:700;font-size:18px;min-width:64px;text-align:right}
+.qcard{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:10px}
+.qcard.judged-ok{border:2px solid var(--ok)} .qcard.judged-mid{border:2px solid var(--mid)} .qcard.judged-ng{border:2px solid var(--ng)}
+.qtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qtop .no{font-weight:700;font-size:18px}
+.chip{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:1px 10px;color:var(--sub);background:var(--soft)}
+.imgbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;display:flex;align-items:center;justify-content:center;min-height:80px}
+.imgbox img{display:block;max-width:100%;height:auto}
+.loading{color:var(--sub);font-size:15px;display:flex;align-items:center;gap:10px}
+.spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ans{border:2px solid var(--accent);border-radius:12px;padding:8px 12px;background:var(--paper)}
+.lab{font-size:13px;color:var(--sub);font-weight:700}
+.ans .tex{font-size:22px;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.ai{border:1px solid var(--ai);background:var(--ai-bg);border-radius:12px;padding:8px 12px}
+.ai .lab{color:var(--ai)}
+.ai .k{font-weight:700;margin:2px 0 6px}
+.ai .t{font-size:16px}
+.ai .t>div{overflow-x:auto;overflow-y:hidden;padding:1px 0}
+.ai .disp{text-align:left}
+details.kai summary{cursor:pointer;color:var(--accent);font-weight:500;min-height:36px;display:flex;align-items:center}
+.judge{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.jb{min-height:64px;border-radius:12px;border:2px solid var(--c);background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px}
+.jb[aria-pressed="true"]{background:var(--cb);box-shadow:inset 0 0 0 2px var(--c)}
+.jb .s{font-size:26px;font-weight:700;color:var(--c);line-height:1}
+.jb .l{font-size:12px;font-weight:700;line-height:1.2;text-align:center}
+.sticky{position:sticky;bottom:0;padding:10px 0 4px;background:linear-gradient(to bottom,transparent,var(--bg) 30%);z-index:3}
+.big{width:100%;min-height:58px;font-size:19px}
+.done{border:2px solid var(--ok)}
+/* 教室長 */
+table.tb{width:100%;border-collapse:collapse;font-size:14px;background:var(--paper)}
+.tbw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.tb th,.tb td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle;white-space:nowrap}
+.tb th{background:var(--soft);font-size:13px;color:var(--sub)}
+.tb td.tx{white-space:normal;min-width:140px}
+.y{color:var(--ok);font-weight:700} .n{color:var(--ng);font-weight:700}
+.btn,.brand{white-space:nowrap}
+/* 本冊：レベル */
+.lv0{--lc:#1F8A5B;--lb:#E3F4EC} .lv1{--lc:#2F6FDB;--lb:#E6EEFC} .lv2{--lc:#B26A00;--lb:#FFF1DC} .lv3{--lc:#B4234A;--lb:#FCE4EA}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lv0{--lc:#4CC38A;--lb:#16342A}:root:not([data-theme="light"]) .lv1{--lc:#6E9BF2;--lb:#1C2A48}:root:not([data-theme="light"]) .lv2{--lc:#E3A33B;--lb:#3A2B12}:root:not([data-theme="light"]) .lv3{--lc:#F07A98;--lb:#3D1A24}}
+:root[data-theme="dark"] .lv0{--lc:#4CC38A;--lb:#16342A}:root[data-theme="dark"] .lv1{--lc:#6E9BF2;--lb:#1C2A48}:root[data-theme="dark"] .lv2{--lc:#E3A33B;--lb:#3A2B12}:root[data-theme="dark"] .lv3{--lc:#F07A98;--lb:#3D1A24}
+.lvb{font-size:13px;font-weight:700;color:var(--lc);background:var(--lb);border-radius:999px;padding:1px 10px}
+.lvpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.lvc,.lvt{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:44px}
+.lvc[aria-pressed="true"],.lvt[aria-pressed="true"]{border-color:var(--lc);background:var(--lb);box-shadow:inset 0 0 0 1px var(--lc)}
+.lvc .lm,.lvt .lm{font-size:28px;font-weight:700;color:var(--lc);line-height:1.1}
+.lvc .ln,.lvt .ln{font-weight:700}
+.lvbar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.lvt .lp{font-variant-numeric:tabular-nums;font-size:14px;color:var(--sub)}
+.lvt .bar{width:100%} .lvt .bar .b-ok{background:var(--lc)}
+.lvt[aria-pressed="false"]{opacity:.75}
+.hlist{display:flex;flex-direction:column;gap:6px}
+.hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-height:48px;text-align:left}
+.hrow .no,.qtop .no{font-weight:700;font-size:18px;min-width:34px}
+.subj{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.subj .sl{font-weight:700;min-width:34px}
+.subj .judge{flex:1;min-width:240px}
+.subj .jb{min-height:52px}
+/* v7：教科・リスニング・英作文・拡大 */
+.subjc .nm{font-size:22px}
+.audio{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.audio a.btn{text-decoration:none;display:inline-flex;align-items:center}
+.audio a.btn.primary{min-height:48px;font-size:17px}
+.selfj{border:2px dashed var(--mid);background:var(--mid-bg);border-radius:12px;padding:8px 12px}
+.selfj ol{margin:4px 0 6px;padding-left:1.4em}
+.imgbox img{cursor:zoom-in}
+.zoomhint{font-size:13px;color:var(--sub);text-align:right}
+body.zoomed{overflow:hidden}
+.zoom{position:fixed;inset:0;z-index:50;background:rgba(10,14,22,.92);display:flex;flex-direction:column}
+.zoom[hidden]{display:none}
+.ztool{display:flex;align-items:center;gap:8px;padding:8px 12px calc(8px);background:var(--paper);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ztool .zp{font-variant-numeric:tabular-nums;min-width:56px;text-align:center;font-weight:700}
+.ztool .zc{margin-left:auto}
+.zscroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;padding:12px}
+.zscroll img{display:block;margin:0 auto;background:#fff;max-width:none;border-radius:6px}
+@media (max-width:520px){
+  .lvbar{grid-template-columns:repeat(2,1fr)}
+  .brand{font-size:16px}
+  .hright>span{display:none}
+  .sheethead{top:53px}
+  .timer{margin-left:0;width:100%;justify-content:flex-end}
+}
+</style>
+</head>
+<body>
+<header><div class="hin">
+  <div class="brand">入試問題チェック<small id="sub">全国の高校入試問題</small></div>
+  <div class="hright" id="hright"></div>
+</div></header>
+<main id="main"></main>
+<div id="zoom" class="zoom" role="dialog" aria-modal="true" aria-label="画像を大きく見る" hidden></div>
+<footer id="src"></footer>
+
+<script>
+/* ===== 設定 ===== */
+const VERSION=8;
+/* この画面が使う GAS の版 */
+const SERVER_VERSION=7;
+/* ↓ GAS を「ウェブアプリ」として公開したときの URL（docs/setup.md 手順7） */
+const API_URL='https://script.google.com/macros/s/AKfycbxXiXnV1qc8DU4svShC-NjX5jsiEN3395ArYjPIDkHmpNRVRd1Jm_PzPwRl6BHVxqck/exec';
+/* 出典（教材シートの出典 → Settings シートの sourceText → これ の順に使う） */
+const SOURCE_DEFAULT='出典：2027年度用 精選 全国高校入試問題集 公立編 数学 別冊付録（〇〇〇〇社）';
+/* いちばん上に出す県（熊本県） */
+const HOME_PREF=43;
+/* 単元別・解き直しで、1回に出す問題の数 */
+const SET_SIZE=10;
+/* 本冊で1回に出す大問の数 */
+const HON_SET=5;
+/* レベル（生徒が自分で選ぶ。先生の側から制限する機能は作らない） */
+const LEVELS=['◎','○','△','▲'];
+const LV_NAME={'◎':'必ず解く基本','○':'標準','△':'応用','▲':'発展（難問）'};
+const LV_NOTE={'◎':'どの高校をめざす人も、まずここから','○':'教科書の内容をしっかり使う問題','△':'考え方を組み合わせる問題','▲':'難関校もめざせる問題'};
+const LEVELS_KEY='nyushi-check-levels';
+/* 本冊の登録で、CSV の教材IDから入れる見本（教室長が書きかえられる） */
+const MAT_DEFAULT={
+ ZS27:{name:'全国精選2027',src:'出典：2027年度用 精選 全国高校入試問題集 数学 公立編（〇〇〇〇社）'},
+ ZS25:{name:'全国精選2025',src:'出典：2025年度用 精選 全国高校入試問題集 数学 公立編（日本教材出版）'},
+ ZE24:{name:'全国精選2024',src:'出典：2024年度用 精選 全国高校入試問題集 英語',subject:'英語'}
+};
+/* v7：教科（教材シートの「教科」列。空なら数学）。この順に並べる */
+const SUBJECTS=['数学','英語','理科','社会','国語'];
+const SUBJ_ICON={'数学':'📐','英語':'🔤','理科':'🔬','社会':'🌏','国語':'📖'};
+/* v7：リスニングの音声の案内ページ（教材ごと。1問ずつのページは問題マスタの「音声URL」） */
+const AUDIO_TOP={ZE24:'https://www.edu-files.com/kyozaipage/2163-0019.html'};
+/* v7：英作文（自分で判定する）の単元：単元名にこの文字があれば「自分で確かめる3つのポイント」を出す */
+const SELF_JUDGE_RE=/英作文/;
+const TAGS=['正負の数','文字式','式の計算','一次方程式','連立方程式','比例・反比例','一次関数','平方根','展開・因数分解','二次方程式','関数y=ax²','平面図形・角度','円周角','合同・相似','三平方の定理','空間図形','確率','データの活用','数の性質'];
+const JUDGE={'◯':{c:'j-ok',l:'自分の力で<br>できた',k:'ok'},'△':{c:'j-mid',l:'迷った・<br>おしい',k:'mid'},'☓':{c:'j-ng',l:'できな<br>かった',k:'ng'}};
+const MARK='❶❷❸❹❺❻❼❽❾❿⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴';
+const jcls=j=>JUDGE[j]?.c||'j-none';
+
+/* ===== 小さな道具 ===== */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uuid=()=>{try{if(crypto.randomUUID)return crypto.randomUUID()}catch(e){}return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12)+'-'+Math.random().toString(36).slice(2,12)};
+const LOGIN_KEY='nyushi-check-login';
+const PENDING_KEY='nyushi-check-pending3';
+function lsGet(k){try{const r=localStorage.getItem(k);return r?JSON.parse(r):null}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+const shortPref=n=>String(n||'').replace(/(都|府|県)$/,'')||n;
+const mark=n=>MARK[n-1]||`(${n})`;
+const mmss=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0')};
+const JP=/[ぁ-んァ-ヶ一-龥（）、。…]/;
+
+/* ===== 通信 ===== */
+async function api(action,payload={},waitMs=60000){
+ if(!API_URL)throw new Error('API_URL が設定されていません。');
+ const body=Object.assign({action,classCode:S.classCode},S.auth?.token?{token:S.auth.token}:{},payload);
+ const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),waitMs);
+ let res,text;
+ /* v5：時間の見はりは、返事を最後まで受けとるまで続ける（とちゅうで止まったまま待ち続けないように） */
+ try{res=await fetch(API_URL,{method:'POST',body:JSON.stringify(body),signal:ctl.signal});text=await res.text()}
+ catch(e){clearTimeout(tm);const err=new Error(ctl.signal.aborted?`サーバーの返事が ${Math.round(waitMs/1000)} 秒たっても来ませんでした（${action}）。少し待ってから「もう一度読みこむ」を押してください。`:'通信できませんでした。インターネットにつながっているか確かめて、もう一度ためしてください。');err.code='net';throw err}
+ clearTimeout(tm);
+ let j;
+ try{j=JSON.parse(text)}catch(e){
+  const err=new Error(`サーバーからの返事が読めませんでした（JSON ではありません）。\n返事の先頭：${text.replace(/\s+/g,' ').slice(0,160)||'（空）'}`);err.code='parse';throw err;
+ }
+ /* v3：版が合わないときは、GAS が実際に返した版・アプリ名・返事を、そのまま出す */
+ if(j.version!==SERVER_VERSION){
+  S.verWarn=`この画面は GAS v${SERVER_VERSION} 用です。GAS が返した内容：版 ${j.version===undefined?'（なし）':'v'+j.version}／アプリ ${j.app||'（なし）'}／状態 ${j.status||'（なし）'}${j.message?'／返事「'+j.message+'」':''}`;
+ }else S.verWarn='';
+ if(j.status!=='ok'){const err=new Error(j.message||'エラーが起きました。');err.code=j.code||'';throw err}
+ return j;
+}
+
+/* ===== 状態 ===== */
+const admInit=()=>({tab:'list',list:null,oldRows:0,csv:'',parsed:null,msg:'',err:'',busy:false,link:null,st:null,stKey:'',hcsv:'',hparsed:null,hmat:'',hsec:'本冊・公立編',hsrc:'',hsubj:'数学'});
+const S={
+ classCode:'',auth:null,subj:'',zoom:null,form:{cc:'',role:'student',sid:'',pin:'',apass:''},
+ screen:'login',busy:false,error:'',note:'',verWarn:'',saveWarn:'',
+ problems:null,materials:[],source:'',results:{},
+ mat:'',sec:'',tab:'pref',tagOpen:'',units:[],levels:{},serverLevels:{},unitOpen:0,lvPick:'',
+ set:null,
+ preview:false,
+ adm:admInit()
+};
+const IMG=new Map(),ANS=new Map(),IMGERR=new Map(),ANSERR=new Map();
+const PERF=window.NYU_PERF={api:[]};
+function saveLogin(){lsSet(LOGIN_KEY,{classCode:S.classCode,auth:S.auth,lastRole:S.form.role})}
+function handleError(e){
+ if(e.code==='class'||(e.code==='auth'&&S.auth)){logout(e.message);return}
+ S.error=e.message;
+}
+async function timed(action,payload){const t=performance.now();try{return await api(action,payload)}finally{PERF.api.push({action,ms:Math.round(performance.now()-t),n:(payload.ids||payload.records||[]).length})}}
+
+/* ===== 問題の一覧 ===== */
+let PMAP=new Map();
+function setProblems(list){S.problems=list;PMAP=new Map(list.map(p=>[p.id,p]))}
+const P=id=>PMAP.get(id);
+const latestOf=id=>S.results[id]?.judge||'';
+const secProblems=()=>(S.problems||[]).filter(p=>p.mat===S.mat&&p.sec===S.sec);
+const matInfo=()=>S.materials.find(m=>m.mat===S.mat&&m.sec===S.sec)||{matName:S.mat,secName:S.sec};
+/* 教材の一覧（教科ごと）。教材シートにない問題は、その教材IDの教材として出す */
+function allMats(){
+ const out=[];
+ S.materials.forEach(m=>{if(!out.find(x=>x.mat===m.mat))out.push({mat:m.mat,matName:m.matName,subject:m.subject||'数学',secs:[]});out.find(x=>x.mat===m.mat).secs.push(m)});
+ (S.problems||[]).forEach(p=>{if(!out.find(x=>x.mat===p.mat))out.push({mat:p.mat,matName:p.mat,subject:'数学',secs:[]});const o=out.find(x=>x.mat===p.mat);if(!o.secs.find(s=>s.sec===p.sec))o.secs.push({mat:p.mat,sec:p.sec,secName:p.sec,matName:o.matName,subject:o.subject})});
+ /* 問題がない教材（まだ登録だけ）は出さない */
+ return out.map(m=>({...m,secs:m.secs.filter(s=>(S.problems||[]).some(p=>p.mat===s.mat&&p.sec===s.sec))})).filter(m=>m.secs.length);
+}
+function subjects(){const u=[...new Set(allMats().map(m=>m.subject))];return u.sort((a,b)=>(SUBJECTS.indexOf(a)+1||99)-(SUBJECTS.indexOf(b)+1||99))}
+/* 教科が1つだけなら、教科を選ぶ画面はとばす */
+const curSubj=()=>{const ss=subjects();return ss.length===1?ss[0]:S.subj};
+const mats=()=>allMats().filter(m=>m.subject===curSubj());
+function prefs(){
+ const m=new Map();
+ secProblems().forEach(p=>{if(!m.has(p.pref))m.set(p.pref,{pref:p.pref,name:p.prefName,rate:p.rate,count:p.count,ids:[]});m.get(p.pref).ids.push(p.id)});
+ return [...m.values()].sort((a,b)=>(a.pref===HOME_PREF?-1:b.pref===HOME_PREF?1:a.pref-b.pref));
+}
+const sortIds=ids=>ids.slice().sort((a,b)=>a<b?-1:1);
+const retryIds=()=>isHonSec()?honIds().filter(ngBase):sortIds(secProblems().filter(p=>['△','☓'].includes(latestOf(p.id))).map(p=>p.id));
+function counts(ids){const c={'◯':0,'△':0,'☓':0,none:0};ids.forEach(id=>{const j=latestOf(id);if(c[j]!==undefined)c[j]++;else c.none++});return c}
+function bar(ids){const c=counts(ids),n=ids.length||1;return `<div class="bar" aria-hidden="true"><i class="b-ok" style="width:${c['◯']/n*100}%"></i><i class="b-mid" style="width:${c['△']/n*100}%"></i><i class="b-ng" style="width:${c['☓']/n*100}%"></i></div>`}
+const dots=ids=>`<div class="dots" aria-hidden="true">${ids.map(id=>`<i class="${jcls(latestOf(id))}"></i>`).join('')}</div>`;
+const sumPills=c=>`<span class="pill j-ok">◯ ${c['◯']}</span><span class="pill j-mid">△ ${c['△']}</span><span class="pill j-ng">☓ ${c['☓']}</span><span class="pill j-none">まだ ${c.none}</span>`;
+const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
+
+/* ===== 本冊（小問ごとの記録・レベル） ===== */
+const isHonSec=()=>secProblems().some(p=>p.hon);
+/* 大問の記録の単位：小問があれば ZS27-H-075-1, -2 …、なければ大問そのもの */
+const targetsOf=id=>{const p=P(id);return p&&p.hon&&p.sub>1?Array.from({length:p.sub},(_,i)=>`${id}-${i+1}`):[id]};
+const allTargets=ids=>ids.flatMap(targetsOf);
+const subLabel=t=>{const m=/-(\d{1,2})$/.exec(t);return m&&P(t.replace(/-\d{1,2}$/,''))?.hon?`(${m[1]})`:''};
+const doneBase=id=>targetsOf(id).every(t=>latestOf(t)==='◯');
+const ngBase=id=>targetsOf(id).some(t=>['△','☓'].includes(latestOf(t)));
+const secKey=()=>`${S.mat}-${S.sec}`;
+const levelKey=()=>`${LEVELS_KEY}:${S.preview?'preview':S.auth?.studentId||''}`;
+function myLevels(){const v=S.levels[secKey()];return typeof v==='string'?v:null}
+function setLevels(v){
+ const lv=LEVELS.filter(l=>v.includes(l)).join('');
+ S.levels[secKey()]=lv;lsSet(levelKey(),S.levels);
+ if(!S.preview&&S.auth?.role==='student')api('saveLevels',{mat:S.mat,sec:S.sec,levels:lv}).catch(()=>{});
+}
+const honIds=()=>sortIds(secProblems().filter(p=>p.hon).map(p=>p.id));
+/* v7：レベルのない教材（英語など。選定表がまだ）は、レベルを選ばずに全部の問題を出す */
+const hasLevels=()=>honIds().some(id=>P(id).level);
+const inLevels=id=>{if(!hasLevels())return true;const l=myLevels()||'';return l.includes(P(id)?.level)};
+function levelProgress(l){const ids=honIds().filter(id=>P(id).level===l);return{done:ids.filter(doneBase).length,total:ids.length}}
+
+/* ===== 画像と答え（まとめて受けとり、置き場に入れる。2回目は通信しない） ===== */
+async function toUrl(img){if(!img)return '';const blob=await (await fetch(`data:${img.mime};base64,${img.data}`)).blob();return URL.createObjectURL(blob)}
+/* v5：5問ずつ受けとって、とどいた順に出す。読めなかった問題は理由を IMGERR に入れる（失敗は置き場に入れない） */
+async function loadImages(ids,onPart){
+ const need=ids.filter(id=>!IMG.get(id));
+ need.forEach(id=>IMGERR.delete(id));
+ for(const part of chunk(need,5)){
+  let j;
+  try{j=await timed('getProblems',{ids:part})}
+  catch(e){if(e.code==='auth'||e.code==='class')throw e;part.forEach(id=>IMGERR.set(id,e.message));onPart&&onPart();continue}
+  for(const p of j.problems){
+   let url='';try{url=await toUrl(p.image)}catch(e){}
+   if(url)IMG.set(p.id,url);else IMGERR.set(p.id,p.error||'この問題の画像がとどきませんでした（サーバーから画像が返ってきませんでした）。');
+  }
+  part.filter(id=>!IMG.get(id)&&!IMGERR.has(id)).forEach(id=>IMGERR.set(id,'この問題の画像がサーバーから返ってきませんでした。'));
+  onPart&&onPart();
+ }
+}
+async function loadAnswers(ids,onPart){
+ const need=ids.filter(id=>!ANS.has(id));
+ need.forEach(id=>ANSERR.delete(id));
+ for(const part of chunk(need,5)){
+  let j;
+  try{j=await timed('getAnswers',{ids:part})}
+  catch(e){if(e.code==='auth'||e.code==='class')throw e;part.forEach(id=>ANSERR.set(id,e.message));onPart&&onPart();continue}
+  for(const a of j.answers){
+   let kai='',dai='';try{kai=await toUrl(a.kaisetsu)}catch(e){}
+   try{dai=await toUrl(a.daihon)}catch(e){}
+   if(a.error&&!kai&&!a.latex)ANSERR.set(a.id,a.error);
+   else{ANS.set(a.id,{latex:a.latex,kai,ai:a.ai,err:a.error||'',dai,daiErr:a.daihonError||''})}
+  }
+  onPart&&onPart();
+ }
+}
+const imgBox=(id,alt)=>{const u=IMG.get(id);if(u)return `<img src="${u}" alt="${esc(alt)}">`;
+ if(IMGERR.has(id))return `<div class="err stack" role="alert"><div><b>画像を読みこめませんでした。</b><br>${esc(IMGERR.get(id))}</div><button class="btn small" data-act="reloadImgs">もう一度読みこむ</button></div>`;
+ return loadingBox('読みこみ中…')};
+
+/* ===== ◯△☓ の記録（まとめて送る。送れなかったものは端末にとっておき、あとで送る） ===== */
+let flushing=false;
+const pending=()=>lsGet(PENDING_KEY)||[];
+async function flush(){
+ if(flushing||!S.auth||S.auth.role!=='student')return;
+ flushing=true;
+ try{
+  for(;;){
+   const q=pending().filter(r=>r.sid===S.auth.studentId);if(!q.length)break;
+   const ses=q[0].sessionId,grp=q.filter(r=>r.sessionId===ses).slice(0,100);
+   try{await api('saveResults',{sessionId:ses,seconds:grp[0].seconds||0,records:grp.map(r=>({recordId:r.recordId,problemId:r.problemId,judge:r.judge}))})}
+   catch(e){
+    if(e.code==='auth'||e.code==='class'){handleError(e);render();return}
+    if(/通信|返事|混み合/.test(e.message)){S.saveWarn='記録をまだ送れていません。通信がもどると、自動で送ります。';render();setTimeout(flush,15000);return}
+   }
+   const sent=new Set(grp.map(r=>r.recordId));
+   lsSet(PENDING_KEY,pending().filter(x=>!sent.has(x.recordId)));
+  }
+  if(S.saveWarn){S.saveWarn='';render()}
+ }finally{flushing=false}
+}
+
+/* ===== 問題用紙（セット） ===== */
+function openSet(ids,title,back){
+ ids=ids.slice(0,30);if(!ids.length)return;
+ S.set={ids,title,back,phase:'solve',sessionId:uuid(),start:0,pausedAt:0,pausedTotal:0,hide:false,judges:{},loading:true,ansLoading:false,err:'',result:null};
+ S.screen='set';S.error='';S.note='';render();scrollTo(0,0);
+ startLoad(S.set);
+}
+function startLoad(set){
+ set.loading=true;set.err='';
+ const wd=setTimeout(()=>{if(S.set===set&&set.loading){set.loading=false;set.ids.forEach(id=>{if(!IMG.get(id)&&!IMGERR.has(id))IMGERR.set(id,'90秒たっても画像がとどきませんでした。「もう一度読みこむ」を押してください。')});render()}},90000);
+ const first=!set.start;
+ loadImages(set.ids,()=>{if(S.set===set){if(first&&!set.start&&set.ids.some(id=>IMG.get(id))){set.start=Date.now();tick()}render()}})
+  .then(()=>{clearTimeout(wd);if(S.set!==set)return;set.loading=false;if(!set.start){set.start=Date.now();tick()}
+   const bad=set.ids.filter(id=>IMGERR.has(id)).length;if(bad)set.err=`${bad}問の画像を読みこめませんでした。理由はそれぞれの問題に出ています。`;render()})
+  .catch(e=>{clearTimeout(wd);if(S.set!==set)return;set.loading=false;if(e.code==='auth'||e.code==='class')handleError(e);else set.err=e.message;render()});
+}
+function elapsed(){const s=S.set;if(!s||!s.start)return 0;const now=s.pausedAt||Date.now();return (now-s.start-s.pausedTotal)/1000}
+let tickTimer=null;
+function tick(){clearInterval(tickTimer);tickTimer=setInterval(()=>{const el=document.getElementById('tv');if(!S.set||S.screen!=='set'){clearInterval(tickTimer);return}if(el)el.textContent=S.set.hide?'--:--':mmss(elapsed())},1000)}
+function pauseToggle(){const s=S.set;if(!s||!s.start||s.phase!=='solve')return;if(s.pausedAt){s.pausedTotal+=Date.now()-s.pausedAt;s.pausedAt=0}else s.pausedAt=Date.now();render()}
+async function checkAnswers(){
+ const s=S.set;if(!s||s.phase!=='solve')return;
+ if(!s.pausedAt)s.pausedAt=Date.now();
+ s.seconds=Math.round(elapsed());s.phase='check';s.ansLoading=true;s.err='';render();scrollTo(0,0);
+ try{await loadAnswers(s.ids,()=>{if(S.set===s)render()})}catch(e){if(e.code==='auth'||e.code==='class'){handleError(e);render();return}s.err=e.message;s.phase='solve';s.pausedTotal+=Date.now()-s.pausedAt;s.pausedAt=0}
+ if(S.set===s){s.ansLoading=false;const bad=s.ids.filter(id=>ANSERR.has(id)).length;if(bad)s.err=`${bad}問の答えを読みこめませんでした。理由はそれぞれの問題に出ています。`;render()}
+}
+function setJudge(id,j){const s=S.set;if(!s||s.phase!=='check'||!JUDGE[j])return;s.judges[id]=s.judges[id]===j?'':j;render()}
+function saveSet(){
+ const s=S.set;if(!s||s.phase!=='check')return;
+ const all=allTargets(s.ids);
+ const judged=all.filter(id=>s.judges[id]);
+ const left=all.length-judged.length;
+ if(left&&!confirm(`まだ判定していない問題が ${left} 問あります。判定した ${judged.length} 問だけ記録しますか？\n（判定していない問題は「まだ」のままです）`))return;
+ const c={'◯':0,'△':0,'☓':0};judged.forEach(id=>c[s.judges[id]]++);
+ if(!S.preview&&judged.length){
+  judged.forEach(id=>{const prev=S.results[id]||{count:0};S.results[id]={judge:s.judges[id],count:(prev.count||0)+1}});
+  lsSet(PENDING_KEY,pending().concat(judged.map(id=>({recordId:uuid(),sid:S.auth.studentId,problemId:id,judge:s.judges[id],sessionId:s.sessionId,seconds:s.seconds}))));
+  flush();
+ }
+ s.phase='done';s.result={c,n:judged.length};render();scrollTo(0,0);
+}
+function leaveSet(force){
+ const s=S.set;
+ if(!force&&s&&((s.phase==='solve'&&elapsed()>20)||(s.phase==='check'&&Object.values(s.judges).some(Boolean)))&&!confirm('とちゅうですが、一覧にもどりますか？（この問題用紙の判定は記録されません）'))return;
+ const b=s?.back||{};S.set=null;clearInterval(tickTimer);
+ S.screen='sec';if(b.tab)S.tab=b.tab;if(b.tagOpen!==undefined)S.tagOpen=b.tagOpen;if(b.unitOpen!==undefined)S.unitOpen=b.unitOpen;
+ render();scrollTo(0,0);
+}
+
+/* ===== ログイン ===== */
+async function boot(){
+ const saved=lsGet(LOGIN_KEY)||{};
+ S.classCode=saved.classCode||'';S.form.cc=S.classCode;
+ if(saved.lastRole==='admin')S.form.role='admin';
+ if(saved.auth?.token){S.auth=saved.auth;S.form.role=saved.auth.role;await enter()}
+ else render();
+}
+async function doLogin(){
+ const f=S.form,cc=f.cc.trim(),st=f.role==='student';
+ if(st&&!cc){S.error='教室コードを入れてください。';render();return}
+ if(!st&&!f.apass){S.error='管理パスワードを入れてください。';render();return}
+ S.busy=true;S.error='';if(st)S.classCode=cc;render();
+ try{
+  const j=st?await api('login',{role:'student',studentId:f.sid.trim(),pin:f.pin.trim()}):await api('login',{role:'admin',password:f.apass});
+  if(!st){S.classCode=j.classCode||'';f.cc=S.classCode}
+  S.auth=st?{role:'student',token:j.token,studentId:j.studentId,name:j.name,grade:j.grade}:{role:'admin',token:j.token};
+  f.pin='';f.apass='';saveLogin();
+  S.busy=false;await enter();
+ }catch(e){S.busy=false;S.error=e.message;render()}
+}
+async function loadList(){
+ const l=await timed('getProblemList',{});
+ setProblems(l.problems);S.materials=l.materials||[];S.units=l.units||[];S.source=l.source||'';
+ S.levels=lsGet(levelKey())||{};
+ if(!S.mat&&subjects().length<=1){const m=mats();if(m.length===1&&m[0].secs.length===1){S.mat=m[0].mat;S.sec=m[0].secs[0].sec}}
+}
+async function enter(){
+ S.busy=true;S.error='';S.screen=S.auth.role==='admin'?'admin':'mats';render();
+ try{
+  if(S.auth.role==='student'){
+   const [,r]=await Promise.all([loadList(),api('getResults')]);
+   S.results=r.results||{};S.serverLevels=r.levels||{};
+   /* 新しい端末でも、前に選んだレベルで始められるように（この端末に記録がないときだけ） */
+   Object.keys(S.serverLevels).forEach(k=>{if(typeof S.levels[k]!=='string'&&S.serverLevels[k])S.levels[k]=S.serverLevels[k]});
+   S.screen='mats';flush();
+  }else{await api('ping');await loadAdminList()}
+ }catch(e){handleError(e)}
+ S.busy=false;render();
+}
+function logout(msg){
+ S.auth=null;S.preview=false;S.problems=null;S.results={};S.screen='login';S.set=null;S.mat='';S.sec='';S.subj='';S.zoom=null;
+ S.adm=admInit();
+ IMG.forEach(u=>u&&URL.revokeObjectURL(u));IMG.clear();ANS.clear();IMGERR.clear();ANSERR.clear();
+ saveLogin();S.error=msg||'';renderZoom();render();
+}
+
+/* ===== 教室長 ===== */
+async function loadAdminList(){const j=await api('adminProblems');S.adm.list=j.problems;S.adm.oldRows=j.oldRows||0;S.materials=j.materials||S.materials;S.units=j.units||S.units}
+async function loadStudents(){
+ S.adm.busy=true;S.adm.err='';render();
+ try{S.adm.st=await api('adminStudents')}catch(e){if(e.code==='auth'||e.code==='class')handleError(e);else S.adm.err=e.message}
+ S.adm.busy=false;render();
+}
+/* 本冊の一括登録：見出し 問題ID,単元番号,単元名,小問数（必ず）／レベル・マーク・音声ページ（あれば）
+   v7：レベルは空でもよい（全部空なら「レベルなし」：生徒は全部の問題を解ける。あとから選定表のレベルを入れて貼り直せる） */
+function checkHon(){
+ const rs=parseCsv(S.adm.hcsv);const out={items:[],units:{},errors:[],hasMark:false,hasAudio:false};
+ if(!rs.length){out.errors.push('貼りつけた文字がありません。');return out}
+ const h=rs[0].map(x=>x.replace(/\s/g,''));const ix=k=>h.indexOf(k);
+ const need=['問題ID','単元番号','単元名','小問数'];
+ out.hasMark=ix('マーク')>=0;out.hasAudio=ix('音声ページ')>=0;const hasLv=ix('レベル')>=0;
+ const miss=need.filter(k=>ix(k)<0);if(miss.length){out.errors.push('1行目の見出しに '+miss.join('・')+' が必要です。');return out}
+ const seen={};
+ rs.slice(1).forEach((r,i)=>{
+  const n=i+2,id=String(r[ix('問題ID')]||'').normalize('NFKC').trim().toUpperCase(),unit=+r[ix('単元番号')],uname=(r[ix('単元名')]||'').trim(),level=hasLv?(r[ix('レベル')]||'').trim():'',sub=+r[ix('小問数')];
+  const mk=out.hasMark?(r[ix('マーク')]||'').trim():undefined,au=out.hasAudio?(r[ix('音声ページ')]||'').trim():undefined;
+  const m=/^([A-Z0-9]+)-([A-Z0-9]+)-(\d{3})$/.exec(id);
+  if(!m)out.errors.push(`${n}行目：問題ID「${id}」の形がちがいます（例 ZS27-H-075）`);
+  else if(seen[id])out.errors.push(`${n}行目：問題ID ${id} が2回出ています`);
+  seen[id]=1;
+  if(level&&!LEVELS.includes(level))out.errors.push(`${n}行目：レベル「${level}」は ◎ ○ △ ▲ のどれかです（レベルなしなら空のまま）`);
+  if(au&&!/^https:\/\/[^\s"<>]+$/.test(au))out.errors.push(`${n}行目：音声ページは https:// で始まる URL にしてください`);
+  if(!(sub>=1&&sub<=20&&Number.isInteger(sub)))out.errors.push(`${n}行目：小問数「${r[ix('小問数')]}」がちがいます（小問がなければ 1）`);
+  if(!(unit>=1)||!uname)out.errors.push(`${n}行目：単元番号と単元名を入れてください`);else out.units[unit]=uname;
+  out.items.push({id,unit,level,sub,mark:mk,audio:au,mat:m?m[1]:'',sec:m?m[2]:''});
+ });
+ const lvN=out.items.filter(x=>x.level).length;
+ if(lvN&&lvN<out.items.length)out.errors.push(`レベルが入っている行（${lvN}）と空の行（${out.items.length-lvN}）がまざっています。レベルは全部の行に入れるか、全部空にしてください。`);
+ const ms=[...new Set(out.items.map(x=>x.mat+'-'+x.sec))];if(ms.length>1)out.errors.push('1回に登録できるのは、1つの教材・セクションだけです：'+ms.join('、'));
+ /* 教材名・出典の見本を入れる（すでに登録してある教材なら、その名前） */
+ const m0=out.items[0]?.mat,d=MAT_DEFAULT[m0],have=S.materials.find(x=>x.mat===m0);
+ if(m0){S.adm.hmat=have?.matName||d?.name||m0;if(d)S.adm.hsrc=d.src;S.adm.hsubj=have?.subject||d?.subject||'数学'}
+ return out;
+}
+async function saveHon(){
+ const p=S.adm.hparsed;if(!p||p.errors.length||!p.items.length)return;
+ S.adm.busy=true;S.adm.msg='';S.adm.err='';render();
+ try{
+  const j=await api('importHon',{mat:p.items[0].mat,sec:p.items[0].sec,matName:S.adm.hmat.trim(),secName:S.adm.hsec.trim(),source:S.adm.hsrc.trim(),subject:S.adm.hsubj.trim(),
+   units:Object.entries(p.units).map(([no,name])=>({no:+no,name})),items:p.items.map(({id,unit,level,sub,mark,audio})=>({id,unit,level,sub,mark,audio}))},180000);
+  S.adm.msg=`保存しました（新しく ${j.added} 問、書きかえ ${j.updated} 問）。`;S.adm.hparsed=null;S.adm.hcsv='';
+  await loadAdminList();
+ }catch(e){if(e.code==='auth'||e.code==='class')handleError(e);else S.adm.err=e.message}
+ S.adm.busy=false;render();
+}
+async function startPreview(){
+ S.busy=true;render();
+ try{S.preview=true;S.subj='';S.mat='';S.sec='';await loadList();S.results={};S.screen='mats'}catch(e){S.preview=false;handleError(e)}
+ S.busy=false;render();
+}
+/* CSV（カンマかタブ区切り）。" " で囲めば、中にカンマや改行があってもよい */
+function parseCsv(text){
+ const src=String(text||'').replace(/\r\n?/g,'\n').replace(/^﻿/,'');
+ const first=src.split('\n').find(l=>l.trim())||'';
+ const d=first.includes('\t')?'\t':',';
+ const out=[];let row=[],f='',q=false;
+ for(let i=0;i<src.length;i++){
+  const c=src[i];
+  if(q){if(c==='"'){if(src[i+1]==='"'){f+='"';i++}else q=false}else f+=c;continue}
+  if(c==='"'&&f.trim()===''){q=true;f='';continue}
+  if(c===d){row.push(f);f='';continue}
+  if(c==='\n'){row.push(f);out.push(row);row=[];f='';continue}
+  f+=c;
+ }
+ row.push(f);out.push(row);
+ return out.map(r=>r.map(x=>x.trim())).filter(r=>r.some(x=>x));
+}
+const COLS={id:['問題ID'],tag:['単元タグ','単元'],latex:['答えLaTeX','答え（LaTeX）','答え(LaTeX)','答え'],rate:['配点率'],count:['出題数'],published:['公開'],aiK:['AI考え方'],aiT:['AI解き方']};
+const ID_RE=/^([A-Z0-9]+)-([A-Z0-9]+)-(\d{2})-(\d{2})(?:-(\d{1,2}))?$/;
+const normId=v=>{const s=String(v||'').normalize('NFKC').trim().toUpperCase().replace(/[ー－―‐]/g,'-');return ID_RE.test(s)?s:''};
+function checkCsv(){
+ const rs=parseCsv(S.adm.csv);const out={items:[],errors:[]};
+ if(!rs.length){out.errors.push('貼りつけた文字がありません。');return out}
+ if(!rs[0].some(x=>x.replace(/\s/g,'')==='問題ID')){out.errors.push('1行目に見出し（問題ID,単元タグ,答えLaTeX,…）が必要です。');return out}
+ const head={};rs[0].forEach((h,i)=>{const k=Object.keys(COLS).find(k=>COLS[k].includes(h.replace(/\s/g,'')));if(k&&head[k]===undefined)head[k]=i});
+ if(head.id===undefined||head.latex===undefined)out.errors.push('見出しに「問題ID」と「答えLaTeX」が必要です。');
+ const width=rs[0].length,seen={};
+ rs.slice(1).forEach((r,i)=>{
+  const n=i+2,g=k=>head[k]===undefined?undefined:r[head[k]];
+  const it={id:normId(g('id')),raw:g('id')||'',tag:(g('tag')||'').trim(),latex:(g('latex')||'').trim(),rate:g('rate'),count:g('count'),published:g('published'),aiK:g('aiK'),aiT:g('aiT'),line:n,errs:[]};
+  if(r.length!==width)it.errs.push('列の数が見出しとちがいます（カンマや改行がある欄は " " で囲んでください）');
+  const m=ID_RE.exec(it.id);
+  if(!m||+m[3]<1||+m[3]>47||+m[4]<1)it.errs.push(`問題ID「${it.raw}」の形がちがいます（例 ZS27-K-43-03）`);
+  else if(seen[it.id])it.errs.push(`問題ID ${it.id} が2回出ています`);
+  if(it.id)seen[it.id]=1;
+  if(it.tag&&!TAGS.includes(it.tag))it.errs.push(`単元タグ「${it.tag}」は一覧にありません`);
+  if(!it.latex)it.errs.push('答えが空です');
+  it.errs.forEach(e=>out.errors.push(`${n}行目：${e}`));
+  out.items.push(it);
+ });
+ return out;
+}
+async function saveCsv(){
+ const p=S.adm.parsed;if(!p||p.errors.length||!p.items.length)return;
+ S.adm.busy=true;S.adm.msg='';S.adm.err='';render();
+ try{
+  const j=await api('importAnswers',{items:p.items.map(({id,tag,latex,rate,count,published,aiK,aiT})=>({id,tag,latex,rate,count,published,aiK,aiT}))},180000);
+  S.adm.msg=`保存しました（新しく ${j.added} 問、書きかえ ${j.updated} 問）。`;S.adm.parsed=null;S.adm.csv='';
+  await loadAdminList();
+ }catch(e){if(e.code==='auth'||e.code==='class')handleError(e);else S.adm.err=e.message}
+ S.adm.busy=false;render();
+}
+async function linkImgs(){
+ S.adm.busy=true;S.adm.link=null;S.adm.err='';render();
+ try{S.adm.link=await api('linkImages',{},300000);await loadAdminList()}
+ catch(e){if(e.code==='auth'||e.code==='class')handleError(e);else S.adm.err=e.message}
+ S.adm.busy=false;render();
+}
+
+/* ===== 描く ===== */
+function render(){
+ const mi=S.materials[0];
+ document.getElementById('src').textContent=(S.mat?matInfo().source:'')||mi?.source||S.source||SOURCE_DEFAULT;
+ const hr=document.getElementById('hright');
+ if(!S.auth)hr.innerHTML='';
+ else if(S.preview)hr.innerHTML=`<span>教室長（生徒画面の確認）</span><button class="btn small" data-act="endPreview">教室長画面へ</button>`;
+ else hr.innerHTML=`<span>${S.auth.role==='admin'?'教室長':esc(S.auth.name)+' さん'}</span><button class="btn small" data-act="logout">ログアウト</button>`;
+ const m=document.getElementById('main');
+ const top=(S.verWarn?`<div class="warn" role="alert">${esc(S.verWarn)}</div>`:'')+(S.saveWarn?`<div class="warn">${esc(S.saveWarn)}</div>`:'')+(S.error?`<div class="err" role="alert">${esc(S.error)}</div>`:'')+(S.note?`<div class="note" role="status">${esc(S.note)}</div>`:'');
+ let body='';
+ if(S.screen==='login')body=vLogin();
+ else if(S.busy&&!S.problems&&S.screen!=='admin')body=loadingBox('問題を読みこんでいます…');
+ else if(S.screen==='mats')body=(subjects().length>1&&!S.subj)?vSubj():vMats();
+ else if(S.screen==='sec')body=vSec();
+ else if(S.screen==='set')body=vSet();
+ else if(S.screen==='admin')body=vAdmin();
+ m.innerHTML=`<div class="stack">${top}${body}</div>`;
+ texAll(m);
+}
+const loadingBox=t=>`<div class="loading" role="status"><span class="spin"></span>${esc(t)}</div>`;
+function texAll(root){
+ if(!window.katex)return;
+ root.querySelectorAll('[data-tex]').forEach(el=>{try{katex.render(el.getAttribute('data-tex'),el,{throwOnError:false,displayMode:el.hasAttribute('data-disp'),strict:'ignore'})}catch(e){el.textContent=el.getAttribute('data-tex')}});
+}
+const tex=(s,disp)=>`<span data-tex="${esc(s)}"${disp?' data-disp':''}>${esc(s)}</span>`;
+/* 文の中の $…$ は数式に、日本語のない行は1行の数式にする */
+function line(s){
+ if(s.includes('$'))return s.split('$').map((seg,i)=>i%2?tex(seg):esc(seg)).join('');
+ if(JP.test(s))return esc(s);
+ return `<span class="disp">${tex('\\displaystyle '+s)}</span>`;
+}
+function crumbs(extra){
+ const mi=matInfo();
+ const parts=[];
+ if(subjects().length>1)parts.push(`<button data-act="toSubj">${esc(curSubj()||'教科')}</button>`);
+ parts.push(`<button data-act="toMats">${esc(mi.matName||'教材')}</button>`);
+ if(S.screen!=='mats')parts.push(extra!==undefined?`<button data-act="toSec">${esc(mi.secName)}</button>`:`<span>${esc(mi.secName)}</span>`);
+ if(extra)parts.push(`<span>${esc(extra)}</span>`);
+ return `<nav class="crumb" aria-label="いまいる場所">${parts.join('<span aria-hidden="true">›</span>')}</nav>`;
+}
+
+function vLogin(){
+ const f=S.form,st=f.role==='student';
+ return `<div class="card login stack">
+  <h1>ログイン</h1>
+  <div class="seg" role="group" aria-label="だれがつかう？">
+   <button data-act="role" data-v="student" aria-pressed="${st}">生徒</button>
+   <button data-act="role" data-v="admin" aria-pressed="${!st}">教室長</button>
+  </div>
+  ${st?`<div><label class="f" for="cc">教室コード</label><input class="t" id="cc" data-in="cc" value="${esc(f.cc)}" autocomplete="off" autocapitalize="off"></div>
+  <div><label class="f" for="sid">生徒番号</label><input class="t" id="sid" data-in="sid" value="${esc(f.sid)}" autocomplete="off" autocapitalize="off"></div>
+  <div><label class="f" for="pin">PIN（4けたの数字）</label><input class="t" id="pin" data-in="pin" value="${esc(f.pin)}" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>`
+  :`<div><label class="f" for="apass">管理パスワード</label><input class="t" id="apass" data-in="apass" value="${esc(f.apass)}" type="password" autocomplete="current-password"></div>`}
+  <div class="muted">一度ログインすると、この端末では次から自動で入ります。</div>
+  <button class="btn primary big" data-act="login" ${S.busy?'disabled':''}>${S.busy?'たしかめています…':'はじめる'}</button>
+ </div>`;
+}
+
+/* v7：教科を選ぶ（教科が2つ以上あるとき、いちばん初めに出す） */
+const subjIds=sj=>(S.problems||[]).filter(p=>allMats().some(m=>m.mat===p.mat&&m.subject===sj)).flatMap(p=>targetsOf(p.id));
+function vSubj(){
+ const head=S.preview?`<div class="warn">教室長の確認用の画面です。◯△☓を押しても記録しません。</div>`
+  :`<div class="card stack"><h1>こんにちは、${esc(S.auth.name)}さん</h1><div class="muted">教科を選んでください。</div></div>`;
+ return head+`<div class="plist">${subjects().map(sj=>{const ids=subjIds(sj),c=counts(ids),n=allMats().filter(m=>m.subject===sj).length;
+  return `<button class="pcard subjc" data-act="openSubj" data-v="${esc(sj)}"><span class="nm"><span aria-hidden="true">${SUBJ_ICON[sj]||'📚'}</span>${esc(sj)}</span>${bar(ids)}<span class="muted">教材 ${n}　◯ ${c['◯']}・△ ${c['△']}・☓ ${c['☓']}</span></button>`}).join('')}</div>`;
+}
+function vMats(){
+ const ms=mats(),many=subjects().length>1;
+ const back=many?`<nav class="crumb" aria-label="いまいる場所"><button data-act="toSubj">教科を選ぶ</button><span aria-hidden="true">›</span><span>${esc(curSubj())}</span></nav>`:'';
+ const head=back+(S.preview?`<div class="warn">教室長の確認用の画面です。◯△☓を押しても記録しません。</div>`
+  :`<div class="card stack"><h1>${many?esc(curSubj()):`こんにちは、${esc(S.auth.name)}さん`}</h1><div class="muted">教材を選んでください。</div></div>`);
+ if(!ms.length)return head+`<div class="card">まだ問題がありません。先生に伝えてください。</div>`;
+ return head+ms.map(m=>`<div class="card stack"><h2>${esc(m.matName)}</h2>
+  <div class="plist">${m.secs.map(s=>{const ps=(S.problems||[]).filter(p=>p.mat===s.mat&&p.sec===s.sec),ids=ps.flatMap(p=>targetsOf(p.id)),c=counts(ids),hon=ps.some(p=>p.hon);
+   return `<button class="pcard" data-act="openSec" data-m="${esc(s.mat)}" data-s="${esc(s.sec)}"><span class="nm">${esc(s.secName)}</span>${bar(ids)}<span class="muted">${ps.length}問${hon?`（小問 ${ids.length}）`:''}中 ◯ ${c['◯']}・△ ${c['△']}・☓ ${c['☓']}</span></button>`}).join('')}</div></div>`).join('');
+}
+
+function vSec(){
+ if(isHonSec())return vHon();
+ const all=secProblems().map(p=>p.id),c=counts(all),r=retryIds();
+ const tabs=`<div class="seg" role="tablist">
+  <button data-act="tab" data-v="pref" aria-pressed="${S.tab==='pref'}">都道府県</button>
+  <button data-act="tab" data-v="retry" aria-pressed="${S.tab==='retry'}">解き直し（${r.length}）</button>
+  <button data-act="tab" data-v="tag" aria-pressed="${S.tab==='tag'}">単元別</button></div>`;
+ const head=`${crumbs()}${S.preview?'<div class="warn">教室長の確認用の画面です。◯△☓を押しても記録しません。</div>':''}
+  <div class="card stack"><h1>${esc(matInfo().secName)}</h1><div class="sum">${sumPills(c)}</div>
+  <div class="muted">県を選ぶと、その県の問題が全部出ます。ノートに全部解いてから「答え合わせ」を押そう。</div></div>`;
+ let list='';
+ if(S.tab==='pref'){
+  list=`<div class="plist">${prefs().map(p=>{const cc=counts(p.ids);return `<button class="pcard${p.pref===HOME_PREF?' home':''}" data-act="pref" data-v="${p.pref}">
+   <span class="nm">${esc(p.name)}${p.pref===HOME_PREF?'<span class="badge">わたしたちの県</span>':''}</span>
+   <span class="muted">${p.rate?`配点率 <b>${esc(p.rate)}</b>`:''}${p.count?`　出題数 ${esc(p.count)}`:''}</span>
+   ${dots(p.ids)}<span class="muted">${p.ids.length}問　◯ ${cc['◯']}・△ ${cc['△']}・☓ ${cc['☓']}</span></button>`}).join('')}</div>`;
+ }else if(S.tab==='retry'){
+  if(!r.length)list=`<div class="card">解き直しの問題はありません。${all.some(id=>latestOf(id))?'すばらしい！':'まずは県の問題に挑戦してみよう。'}</div>`;
+  else{
+   const g=new Map();r.forEach(id=>{const p=P(id);if(!g.has(p.pref))g.set(p.pref,{name:p.prefName,ids:[]});g.get(p.pref).ids.push(id)});
+   list=`<div class="card stack"><div>△と☓がついた問題です。もう一度解いて◯にしよう。</div>
+    <div class="row">${chunk(r,SET_SIZE).map((ids,i)=>`<button class="btn primary" data-act="retrySet" data-v="${i}">${r.length>SET_SIZE?`まとめて解き直す ${i*SET_SIZE+1}〜${i*SET_SIZE+ids.length}問目`:`まとめて解き直す（${ids.length}問）`}</button>`).join('')}</div></div>
+    <div class="plist">${[...g.entries()].map(([pref,o])=>`<button class="pcard" data-act="retryPref" data-v="${pref}"><span class="nm">${esc(o.name)}</span>${dots(o.ids)}<span class="muted">△☓ ${o.ids.length}問</span></button>`).join('')}</div>`;
+  }
+ }else{
+  const used=TAGS.filter(t=>secProblems().some(p=>p.tag===t));
+  list=`<div class="plist">${used.map(t=>{const ids=sortIds(secProblems().filter(p=>p.tag===t).map(p=>p.id)),cc=counts(ids),open=S.tagOpen===t;
+   return `<div class="pcard"><button class="lnk" style="text-align:left;padding:0;min-height:0" data-act="tagOpen" data-v="${esc(t)}" aria-expanded="${open}"><span class="nm" style="color:var(--ink)">${esc(t)}</span></button>${bar(ids)}<span class="muted">${ids.length}問中 ◯ ${cc['◯']}・△ ${cc['△']}・☓ ${cc['☓']}</span>
+    ${open?`<div class="row">${chunk(ids,SET_SIZE).map((g,i)=>`<button class="btn small" data-act="tagSet" data-t="${esc(t)}" data-v="${i}">${i*SET_SIZE+1}〜${i*SET_SIZE+g.length}問目</button>`).join('')}</div>`:`<button class="btn small" data-act="tagOpen" data-v="${esc(t)}">${Math.ceil(ids.length/SET_SIZE)}つの問題用紙</button>`}</div>`}).join('')}</div>`;
+ }
+ return head+tabs+list;
+}
+
+function vSet(){
+ const s=S.set,mixed=new Set(s.ids.map(id=>P(id)?.pref)).size>1;
+ const timer=s.phase==='done'?'':`<div class="timer"><span class="muted">${s.phase==='solve'?(s.pausedAt?'一時停止中':'経過時間'):'かかった時間'}</span><span class="tv" id="tv">${s.hide?'--:--':mmss(elapsed())}</span>
+  ${s.phase==='solve'&&s.start?`<button class="btn small" data-act="pause">${s.pausedAt?'再開':'一時停止'}</button>`:''}
+  <button class="btn small" data-act="hideTimer" aria-pressed="${s.hide}">${s.hide?'時間を見る':'かくす'}</button></div>`;
+ const head=`${crumbs(s.title)}<div class="sheethead"><button class="lnk" data-act="leave">← もどる</button><span class="ttl">${esc(s.title)}</span><span class="muted">${s.ids.length}問</span>${timer}</div>${s.phase==='done'?'':'<div class="zoomhint">画像を押すと、大きく見られます</div>'}`;
+ const got=s.ids.filter(id=>IMG.get(id)).length;
+ if(s.loading&&!got&&!s.ids.some(id=>IMGERR.has(id)))return head+`<div class="card">${loadingBox(`${s.ids.length}問の問題を読みこんでいます…`)}</div>`;
+ if(s.phase==='done'){
+  const r=s.result;
+  return head+`<div class="card done stack"><h2>記録しました！</h2><div class="sum"><span class="pill j-ok">◯ ${r.c['◯']}</span><span class="pill j-mid">△ ${r.c['△']}</span><span class="pill j-ng">☓ ${r.c['☓']}</span></div>
+   <div>かかった時間：<b>${mmss(s.seconds||0)}</b>${S.preview?'（確認用なので記録はしていません）':''}</div>
+   <div class="row"><button class="btn primary" data-act="leaveForce">一覧にもどる</button>
+   ${r.c['△']+r.c['☓']?`<button class="btn" data-act="redoNg">△☓の問題だけ、もう一度解く</button>`:''}</div></div>`;
+ }
+ const cards=s.ids.map((id,i)=>{
+  const p=P(id)||{no:i+1,prefName:'',tag:''},url=IMG.get(id),a=ANS.get(id);
+  if(p.hon)return honCard(id,p,url,a);
+  const j=s.judges[id]||'',last=latestOf(id);
+  let lower='';
+  if(s.phase==='check'){
+   if(ANSERR.has(id))lower=`<div class="err" role="alert"><b>答えを読みこめませんでした。</b><br>${esc(ANSERR.get(id))}</div>`;
+   else if(!a)lower=loadingBox('答えを読みこんでいます…');
+   else lower=`<div class="ans"><div class="lab">答え</div><div class="tex">${tex(a.latex,true)}</div></div>
+    ${a.ai?`<div class="ai"><div class="lab">AI解説</div>${a.ai.k?`<div class="k">考え方：${line(a.ai.k)}</div>`:''}${a.ai.t?.length?`<div class="t">${a.ai.t.map(l=>`<div>${line(l)}</div>`).join('')}</div>`:''}</div>`:''}
+    ${a.kai?`<details class="kai"><summary>教材の解説を見る</summary><div class="imgbox"><img src="${a.kai}" alt="教材の解説"></div></details>`:''}
+    <div><div class="lab">自分で判定しよう</div><div class="judge">${Object.keys(JUDGE).map(k=>`<button class="jb ${JUDGE[k].c}" data-act="judge" data-id="${id}" data-v="${k}" aria-pressed="${j===k}"><span class="s">${k}</span><span class="l">${JUDGE[k].l}</span></button>`).join('')}</div></div>`;
+  }
+  return `<section class="qcard${j?' judged-'+JUDGE[j].k:''}" id="q-${id}">
+   <div class="qtop">${mixed?`<span class="no">${esc(shortPref(p.prefName))} ${mark(p.no)}</span>`:''}${p.tag?`<span class="chip">${esc(p.tag)}</span>`:''}${last?`<span class="pill ${jcls(last)}">前回 ${last}</span>`:''}</div>
+   <div class="imgbox">${imgBox(id,`${p.prefName} 問題${p.no}`)}</div>${lower}</section>`;
+ }).join('');
+ const all=allTargets(s.ids),judged=all.filter(id=>s.judges[id]).length;
+ const foot=s.phase==='solve'
+  ?`<div class="sticky"><button class="btn primary big" data-act="check">答え合わせ（${s.ids.length}問）</button></div>`
+  :`<div class="sticky"><button class="btn primary big" data-act="saveSet" ${s.ansLoading?'disabled':''}>記録する（判定 ${judged} / ${all.length}）</button></div>`;
+ return head+(s.err?`<div class="err" role="alert">${esc(s.err)}${s.phase==='solve'&&s.ids.some(id=>IMGERR.has(id))?' <button class="btn small" data-act="reloadImgs">もう一度読みこむ</button>':''}</div>`:'')+(s.loading&&got<s.ids.length?`<div class="note">${loadingBox(`読みこみ中… ${got} / ${s.ids.length} 問`)}</div>`:'')+(s.phase==='check'&&!s.ansLoading?`<div class="note">答えと解説を見て、1問ずつ ◯△☓ をつけよう。</div>`:'')+cards+foot;
+}
+
+/* 本冊の大問カード：問題 → 答えと解説（画像）→ 小問ごとに ◯△☓ */
+function honCard(id,p,url,a){
+ const s=S.set,ts=targetsOf(id),js=ts.map(t=>s.judges[t]||'');
+ const worst=js.includes('☓')?'ng':js.includes('△')?'mid':js.every(x=>x==='◯')?'ok':'';
+ const all=js.every(Boolean);
+ let lower='';
+ if(s.phase==='check'){
+  if(ANSERR.has(id))lower=`<div class="err" role="alert"><b>答えと解説を読みこめませんでした。</b><br>${esc(ANSERR.get(id))}</div>`;
+  else if(!a)lower=loadingBox('答えを読みこんでいます…');
+  else lower=`${a.kai?`<div><div class="lab">答えと解説</div><div class="imgbox"><img src="${a.kai}" alt="答えと解説 ${p.no}"></div></div>`:`<div class="err">答えと解説の画像がありません。${esc(a.err||'')}</div>`}
+   ${a.dai?`<details class="kai"><summary>放送される英語（台本）を見る</summary><div class="imgbox"><img src="${a.dai}" alt="放送される英語 ${p.no}"></div></details>`:(a.daiErr?`<div class="warn">放送される英語（台本）を読みこめませんでした。${esc(a.daiErr)}</div>`:'')}
+   ${selfJudge(p)?`<div class="selfj"><div class="lab">自分で確かめる3つのポイント</div><ol><li>聞かれたことに、ちゃんと答えている？</li><li>語数・文の数は、条件に合っている？</li><li>文法やつづりのまちがいはない？</li></ol><div><b>迷ったら△にして、先生に見てもらおう。</b>答えは「例」なので、ちがう書き方でも正解のことがあります。</div></div>`:''}
+   <div class="stack"><div class="lab">自分で判定しよう${ts.length>1?'（小問ごと）':''}</div>${ts.map(t=>{const j=s.judges[t]||'',last=latestOf(t);
+    return `<div class="subj">${ts.length>1?`<span class="sl">${subLabel(t)}</span>`:''}<div class="judge">${Object.keys(JUDGE).map(k=>`<button class="jb ${JUDGE[k].c}" data-act="judge" data-id="${t}" data-v="${k}" aria-pressed="${j===k}" aria-label="${esc(subLabel(t)||'')} ${k}"><span class="s">${k}</span><span class="l">${JUDGE[k].l}</span></button>`).join('')}</div>${last?`<span class="pill ${jcls(last)}">前回 ${last}</span>`:''}</div>`}).join('')}</div>`;
+ }
+ const lastDots=ts.length>1?`<span class="muted">前回</span>${dots(ts)}`:(latestOf(id)?`<span class="pill ${jcls(latestOf(id))}">前回 ${latestOf(id)}</span>`:'');
+ return `<section class="qcard${all&&worst?' judged-'+worst:''}" id="q-${id}">
+  <div class="qtop"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level} ${LV_NAME[p.level]||''}</span>`:''}${ts.length>1?`<span class="chip">小問 ${ts.length}</span>`:''}${lastDots}</div>
+  ${audioBar(p)}
+  <div class="imgbox">${imgBox(id,`問題${p.no}`)}</div>${lower}</section>`;
+}
+
+/* v7：英作文の単元か（自分で判定する問題） */
+function selfJudge(p){const u=S.units.find(x=>x.mat===p.mat&&x.sec===p.sec&&x.no===p.unit);return !!u&&SELF_JUDGE_RE.test(u.name)}
+/* v7：リスニング。教材会社の音声ページを新しいタブで開く（1問ずつのページと、案内ページ） */
+function audioBar(p){
+ if(!p.audio)return '';
+ const top=AUDIO_TOP[p.mat];
+ return `<div class="audio"><a class="btn primary" href="${esc(p.audio)}" target="_blank" rel="noopener noreferrer">🔊 ${p.no}番の音声を聞く</a>${top?`<a class="btn small" href="${esc(top)}" target="_blank" rel="noopener noreferrer">音声の案内ページ</a>`:''}<span class="muted">新しいタブで開きます。聞き終わったら、このタブにもどろう。</span></div>`;
+}
+
+/* 本冊：はじめて開いたときのレベル選び（最初の一歩も、生徒が自分で決める） */
+function vLevelPick(){
+ const sel=S.lvPick;
+ return `${crumbs()}<div class="card stack"><h1>どのレベルから始める？</h1>
+  <div>自分で決めよう。あとから、いつでも変えられます。いくつ選んでもOKです。</div>
+  <div class="lvpick">${LEVELS.map(l=>{const pr=levelProgress(l);return `<button class="lvc lv${LEVELS.indexOf(l)}" data-act="lvPick" data-v="${l}" aria-pressed="${sel.includes(l)}">
+   <span class="lm">${l}</span><span class="ln">${LV_NAME[l]}</span><span class="muted">${LV_NOTE[l]}</span><span class="muted">${pr.total}問</span></button>`}).join('')}</div>
+  <button class="btn primary big" data-act="lvStart" ${sel?'':'disabled'}>${sel?`${sel} で はじめる`:'レベルを選んでください'}</button></div>`;
+}
+
+/* 本冊のセクション画面 */
+function vHon(){
+ const useLv=hasLevels();
+ if(useLv&&myLevels()===null)return vLevelPick();
+ const lv=useLv?myLevels():'',ids=honIds(),r=retryIds();
+ const bar2=`<div class="card stack"><div class="row"><h1 style="margin-right:auto">${esc(matInfo().secName)}</h1></div>
+  <div class="muted">レベルを押して、解く問題を選ぼう（いくつ選んでもOK）。</div>
+  <div class="lvbar">${LEVELS.map(l=>{const pr=levelProgress(l);return `<button class="lvt lv${LEVELS.indexOf(l)}" data-act="lvToggle" data-v="${l}" aria-pressed="${lv.includes(l)}">
+   <span class="lm">${l}</span><span class="ln">${LV_NAME[l]}</span><span class="lp">${pr.done} / ${pr.total}</span>
+   <span class="bar" aria-hidden="true"><i class="b-ok" style="width:${pr.total?pr.done/pr.total*100:0}%"></i></span></button>`}).join('')}</div>
+  ${nudge(lv)}</div>`;
+ const allDone=ids.filter(doneBase).length;
+ const bar0=`<div class="card stack"><h1>${esc(matInfo().secName)}</h1>
+  <div class="muted">単元を選んで、問題に挑戦しよう。全部の小問が◯になった大問：<b>${allDone}</b> / ${ids.length}</div>
+  <div class="bar" aria-hidden="true"><i class="b-ok" style="width:${ids.length?allDone/ids.length*100:0}%"></i></div></div>`;
+ const tabs=`<div class="seg" role="tablist"><button data-act="tab" data-v="unit" aria-pressed="${S.tab!=='retry'}">単元</button><button data-act="tab" data-v="retry" aria-pressed="${S.tab==='retry'}">解き直し（${r.length}）</button></div>`;
+ const head=`${crumbs()}${S.preview?'<div class="warn">教室長の確認用の画面です。◯△☓を押しても記録しません。</div>':''}${useLv?bar2:bar0}`;
+ if(useLv&&!lv)return head+`<div class="card">上のレベルを1つ以上押すと、問題が出ます。</div>`;
+ let list='';
+ if(S.tab==='retry'){
+  list=r.length?`<div class="card stack"><div>△と☓がついた小問がある大問です。もう一度解いて◯にしよう。</div>
+   <div class="row">${chunk(r,HON_SET).map((g,i)=>`<button class="btn primary" data-act="honSet" data-k="retry" data-v="${i}">${r.length>HON_SET?`${i*HON_SET+1}〜${i*HON_SET+g.length}問目`:`まとめて解き直す（${g.length}問）`}</button>`).join('')}</div></div>
+   ${honList(r,'retry')}`:`<div class="card">解き直しの問題はありません。</div>`;
+ }else if(S.unitOpen){
+  const u=S.units.find(x=>x.mat===S.mat&&x.sec===S.sec&&x.no===S.unitOpen)||{no:S.unitOpen,name:''};
+  const us=ids.filter(id=>P(id).unit===u.no&&inLevels(id));
+  list=`<div class="row"><button class="lnk" data-act="unitOpen" data-v="0">← 単元の一覧</button></div>
+   <div class="card stack"><h2>${u.no}. ${esc(u.name)}</h2><div class="muted">${useLv?`選んだレベル（${lv}）の問題 ${us.length}問`:`${us.length}問`}</div>
+   ${us.length?`<div class="row">${chunk(us,HON_SET).map((g,i)=>`<button class="btn primary" data-act="honSet" data-k="unit" data-v="${i}">${us.length>HON_SET?`まとめて解く ${i*HON_SET+1}〜${i*HON_SET+g.length}問目`:`まとめて解く（${g.length}問）`}</button>`).join('')}</div>`:'<div>この単元には、選んだレベルの問題がありません。上でレベルを足してみよう。</div>'}</div>
+   ${honList(us,'one')}`;
+ }else{
+  const us=S.units.filter(x=>x.mat===S.mat&&x.sec===S.sec);
+  list=`<div class="plist">${us.map(u=>{const all=ids.filter(id=>P(id).unit===u.no),mine=all.filter(inLevels),d=mine.filter(doneBase).length;
+   return `<button class="pcard" data-act="unitOpen" data-v="${u.no}"><span class="nm">${u.no}. ${esc(u.name)}</span>
+    ${useLv?`<span class="muted">${LEVELS.map(l=>{const n=all.filter(id=>P(id).level===l).length;return n?`${l}${n}`:''}).filter(Boolean).join('　')}</span>`:''}
+    ${mine.length?`${bar2u(mine)}<span class="muted">${useLv?'選んだレベル ':''}${mine.length}問中 ぜんぶ◯ ${d}問</span>`:'<span class="muted">選んだレベルの問題はありません</span>'}</button>`}).join('')}</div>`;
+ }
+ return head+tabs+list;
+}
+const bar2u=ids=>{const n=ids.length||1,d=ids.filter(doneBase).length,g=ids.filter(ngBase).length;return `<div class="bar" aria-hidden="true"><i class="b-ok" style="width:${d/n*100}%"></i><i class="b-ng" style="width:${g/n*100}%"></i></div>`};
+function honList(ids,kind){
+ return `<div class="hlist">${ids.map((id,i)=>{const p=P(id),ts=targetsOf(id);
+  return `<button class="hrow" data-act="honOne" data-k="${kind}" data-v="${i}"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level}</span>`:''}${p.audio?'<span class="chip">🔊 リスニング</span>':''}
+   <span class="muted">${ts.length>1?`小問 ${ts.length}`:'小問なし'}</span>${dots(ts)}${doneBase(id)?'<span class="pill j-ok">ぜんぶ◯</span>':''}</button>`}).join('')}</div>`;
+}
+/* やさしい声かけ：選んだレベルがほぼ終わっていて、次のレベルをまだ選んでいないとき */
+function nudge(lv){
+ for(let i=0;i<LEVELS.length-1;i++){
+  const l=LEVELS[i],nx=LEVELS[i+1];if(!lv.includes(l)||lv.includes(nx))continue;
+  const pr=levelProgress(l);
+  if(pr.total&&pr.done/pr.total>=0.8)return `<div class="note">${l} が ${pr.done}/${pr.total} まで来たね。準備ができたら、${nx}（${LV_NAME[nx]}）にも進んでみよう。</div>`;
+ }
+ return '';
+}
+
+function vAdmin(){
+ const A=S.adm;
+ const tabs=`<div class="seg" role="tablist">
+  <button data-act="atab" data-v="st" aria-pressed="${A.tab==='st'}">生徒の様子</button>
+  <button data-act="atab" data-v="list" aria-pressed="${A.tab==='list'}">問題の一覧</button>
+  <button data-act="atab" data-v="csv" aria-pressed="${A.tab==='csv'}">答えの一括登録</button>
+  <button data-act="atab" data-v="hon" aria-pressed="${A.tab==='hon'}">本冊の登録</button>
+  <button data-act="atab" data-v="link" aria-pressed="${A.tab==='link'}">画像の自動登録</button></div>`;
+ const msg=(A.err?`<div class="err">${esc(A.err)}</div>`:'')+(A.msg?`<div class="note">${esc(A.msg)}</div>`:'')+(A.oldRows?`<div class="warn">試作（43-01 の形）の行が ${A.oldRows} 行残っています。Apps Script のエディタで resetTrial を1回実行してください（docs/setup.md）。</div>`:'');
+ let b='';
+ if(A.tab==='list'){
+  const l=A.list;
+  if(!l)b=loadingBox('読みこんでいます…');
+  else{
+   const uname=x=>{const u=S.units.find(u=>u.mat===x.mat&&u.sec===x.sec&&u.no===x.unit);return `${x.unit}. ${u?u.name:''}`};
+   const g=new Map();l.forEach(x=>{const k=x.mat+'-'+x.sec+'-'+(x.hon?'u'+x.unit:x.pref);if(!g.has(k))g.set(k,{name:x.hon?uname(x):x.prefName,mat:x.mat,sec:x.sec,rate:x.hon?'':x.rate,count:x.hon?'':x.count,hon:x.hon,items:[]});g.get(k).items.push(x)});
+   const cnt=f=>l.filter(f).length;
+   b=`<div class="card stack"><div class="row"><span>登録 <b>${l.length}</b> 問 ／ 生徒に出る <b>${cnt(x=>x.ready)}</b> 問 ／ 問題画像 ${cnt(x=>x.hasImage)} ／ 教材の解説 ${cnt(x=>x.hasKaisetsu)} ／ AI解説 ${cnt(x=>x.hasAI)}（確認済み ${cnt(x=>x.aiChecked)}）</span>
+    <button class="btn primary" data-act="preview" style="margin-left:auto" ${S.busy?'disabled':''}>生徒画面で確かめる</button></div></div>
+    <div class="tbw"><table class="tb"><thead><tr><th>教材</th><th>都道府県・単元</th><th>問題</th><th>画像</th><th>答え</th><th>教材の解説</th><th>AI解説</th><th>生徒に出る</th><th>配点率・レベル</th><th>出題数・小問</th></tr></thead><tbody>
+    ${[...g.values()].map(o=>{const n=o.items.length,c=f=>o.items.filter(f).length,ok=(v,m)=>v===m?`<span class="y">${v}</span>`:`<span class="n">${v}</span>`;
+     return `<tr><td>${esc(o.mat)}-${esc(o.sec)}</td><td>${esc(o.name)}</td><td>${n}</td><td>${ok(c(x=>x.hasImage),n)}</td><td>${o.hon?'（画像）':ok(c(x=>x.latex),n)}</td><td>${o.hon?ok(c(x=>x.hasKaisetsu),n):c(x=>x.hasKaisetsu)}</td><td>${o.hon?'—':c(x=>x.hasAI)}</td><td>${ok(c(x=>x.ready),n)}</td><td>${o.hon?(c(x=>x.level)?LEVELS.map(l=>{const k=c(x=>x.level===l);return k?l+k:''}).join(' '):'<span class="muted">レベルなし</span>')+(c(x=>x.mark)?`<br><span class="muted">マーク ${c(x=>x.mark)}問</span>`:''):esc(o.rate)}</td><td>${o.hon?o.items.reduce((a,x)=>a+x.sub,0)+(c(x=>x.audio)?`<br><span class="muted">音声 ${c(x=>x.audio)}・台本 ${ok(c(x=>x.hasDaihon),c(x=>x.audio))}</span>`:''):esc(o.count)}</td></tr>`}).join('')}
+    </tbody></table></div>`;
+  }
+ }else if(A.tab==='st'){
+  const d=A.st;
+  if(!d)b=A.busy?loadingBox('読みこんでいます…'):'<div class="card"><button class="btn primary" data-act="loadSt">生徒の様子を読みこむ</button></div>';
+  else{
+   const all=d.materials.filter(m=>d.totals[m.mat+'-'+m.sec]);
+   const key=all.some(m=>m.mat+'-'+m.sec===A.stKey)?A.stKey:(all[0]?all[0].mat+'-'+all[0].sec:'');
+   const hs=all.filter(m=>m.mat+'-'+m.sec===key);
+   /* v7：レベルなしの教材は「全部」の1列 */
+   const lvCols=m=>{const t=d.totals[m.mat+'-'+m.sec]||{};const ls=LEVELS.filter(l=>t[l]);if(t['']||!ls.length)ls.push('');return ls};
+   b=`${all.length>1?`<div class="seg" role="tablist" aria-label="本冊の教材">${all.map(m=>`<button data-act="stKey" data-v="${esc(m.mat+'-'+m.sec)}" aria-pressed="${m.mat+'-'+m.sec===key}">${esc(m.matName)} ${esc(m.secName)}</button>`).join('')}</div>`:''}
+    <div class="card stack"><div class="muted">見るだけの画面です。レベルは生徒が自分で選びます（こちらから変えることはできません）。数は小問ごとの最新の判定です。</div>
+    <div class="row"><button class="btn small" data-act="loadSt">読みこみ直す</button></div></div>
+    <div class="tbw"><table class="tb"><thead><tr><th>生徒</th><th>学年</th><th>計算・一行問題<br>◯ / △ / ☓</th>
+    ${hs.map(m=>{const cols=lvCols(m),useLv=cols.some(Boolean);return `${useLv?`<th>${esc(m.matName)} ${esc(m.secName)}<br>選んでいるレベル</th>`:''}${cols.map(l=>`<th>${l?l:esc(m.matName)+' '+esc(m.secName)+'<br>'} ◯/△/☓<br><span class="muted">全${d.totals[m.mat+'-'+m.sec][l]||0}</span></th>`).join('')}`}).join('')}<th>最後の記録</th></tr></thead><tbody>
+    ${d.students.map(st=>`<tr><td>${esc(st.name)}<br><span class="muted">${esc(st.id)}</span></td><td>${esc(st.grade)}</td><td>${st.k['◯']} / ${st.k['△']} / ${st.k['☓']}</td>
+     ${hs.map(m=>{const key=m.mat+'-'+m.sec,lv=st.levels[key],h=st.hon[key]||{},cols=lvCols(m),useLv=cols.some(Boolean);return `${useLv?`<td>${lv===undefined?'<span class="muted">まだ開いていない</span>':(lv?`<b>${esc(lv)}</b>`:'<span class="muted">なし</span>')}</td>`:''}${cols.map(l=>{const x=h[l];return `<td>${x?`<span class="y">${x['◯']}</span> / ${x['△']} / <span class="n">${x['☓']}</span>`:'—'}</td>`}).join('')}`}).join('')}
+     <td>${esc((st.last||'').slice(5,16))}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+ }else if(A.tab==='hon'){
+  const p=A.hparsed;
+  b=`<div class="card stack"><div>本冊の問題を登録します。<code>ZS27_honsatsu.csv</code>・<code>ZE24_honsatsu.csv</code> などをメモ帳で開き、全部コピーして貼ってください（見出し：<code>問題ID,単元番号,単元名,小問数</code> は必ず。<code>レベル</code>・<code>マーク</code>・<code>音声ページ</code> はあれば）。答えは画像なので、ここでは入れません（「画像の自動登録」でつなぎます）。</div>
+   <div class="muted">レベルが空の教材（英語など）は、生徒はレベルを選ばずに全部の問題を解けます。あとで選定表ができたら、レベルを入れた同じ CSV を貼って保存すると、生徒が選ぶレベルに切りかわります（記録はそのまま）。</div>
+   ${p&&!p.errors.length?`<div class="row"><label class="muted">教科 <select class="t" data-in2="hsubj" style="max-width:120px;min-height:40px;font-size:15px">${SUBJECTS.map(x=>`<option${x===A.hsubj?' selected':''}>${x}</option>`).join('')}</select></label>
+   <label class="muted">教材名 <input class="t" data-in2="hmat" value="${esc(A.hmat)}" style="max-width:220px;min-height:40px;font-size:15px"></label>
+   <label class="muted">セクション名 <input class="t" data-in2="hsec" value="${esc(A.hsec)}" style="max-width:220px;min-height:40px;font-size:15px"></label></div>
+   <label class="muted" style="display:block">出典（はじめて登録する教材のときに使います）<input class="t" data-in2="hsrc" value="${esc(A.hsrc)}" style="min-height:40px;font-size:15px"></label>`:''}
+   <textarea class="t" data-in2="hcsv" spellcheck="false" placeholder="問題ID,単元番号,単元名,小問数,マーク,レベル,音声ページ">${esc(A.hcsv)}</textarea>
+   <div class="row"><button class="btn" data-act="honCheck">確かめる</button>
+   <button class="btn primary" data-act="honSave" ${!p||p.errors.length||!p.items.length||A.busy?'disabled':''}>${A.busy?'保存しています…':'保存する'}</button></div></div>
+   ${p?(p.errors.length?`<div class="err">まちがいがあるので、保存できません。\n${esc(p.errors.slice(0,30).join('\n'))}</div>`:`<div class="note">${p.items.length}問（単元 ${Object.keys(p.units).length}・小問 ${p.items.reduce((a,x)=>a+x.sub,0)}）、まちがいはありません。　${p.items.some(x=>x.level)?LEVELS.map(l=>`${l} ${p.items.filter(x=>x.level===l).length}`).join('　'):'レベルなし（生徒は全部の問題を解けます）'}${p.hasMark?`　マーク ${p.items.filter(x=>x.mark).length}問`:''}${p.hasAudio?`　音声ページ ${p.items.filter(x=>x.audio).length}問`:''}</div>`):''}`;
+ }else if(A.tab==='csv'){
+  const p=A.parsed;
+  b=`<div class="card stack"><div>1行目に見出し（<code>問題ID,単元タグ,答えLaTeX,配点率,出題数,AI考え方,AI解き方</code>。<code>公開</code> も使えます）、2行目から1問ずつ。Claude からもらった <code>ZS27_answers.csv</code> をテキストで開き、全部コピーして貼ってください。</div>
+   <textarea class="t" data-in2="csv" spellcheck="false" placeholder="問題ID,単元タグ,答えLaTeX,配点率,出題数,AI考え方,AI解き方">${esc(A.csv)}</textarea>
+   <div class="row"><button class="btn" data-act="csvCheck">確かめる（答えを数式で表示）</button>
+   <button class="btn primary" data-act="csvSave" ${!p||p.errors.length||!p.items.length||A.busy?'disabled':''}>${A.busy?'保存しています…':'保存する'}</button></div></div>
+   ${p?`${p.errors.length?`<div class="err">まちがいがあるので、保存できません。\n${esc(p.errors.slice(0,30).join('\n'))}</div>`:`<div class="note">${p.items.length}問、まちがいはありません。数式の形を目で確かめてから「保存する」を押してください。</div>`}
+   <div class="tbw"><table class="tb"><thead><tr><th>行</th><th>問題ID</th><th>単元タグ</th><th>答え（表示）</th><th>AI解説</th><th>配点率</th></tr></thead><tbody>
+   ${p.items.map(it=>`<tr><td>${it.line}</td><td>${it.id?it.id:`<span class="n">${esc(it.raw)}</span>`}</td><td>${it.tag&&!TAGS.includes(it.tag)?`<span class="n">${esc(it.tag)}</span>`:esc(it.tag)}</td><td class="tx">${it.latex?tex(it.latex):''}</td><td>${it.aiK||it.aiT?'あり':'—'}</td><td>${esc(it.rate||'')}</td></tr>`).join('')}
+   </tbody></table></div>`:''}`;
+ }else{
+  const k=A.link;
+  b=`<div class="card stack"><div>ドライブの <b>入試問題チェック ＞ 問題画像</b> に、画像を入れてから押してください（フォルダごと入れても大丈夫です）。ファイル名（例 <code>ZS27-K-43-03.png</code>・<code>ZS27-K-43-03_kaisetsu.png</code>、本冊は <code>ZS27-H-075.png</code>・<code>ZS27-H-075_kaitou.png</code>、リスニングの台本は <code>ZE24-H-001_daihon.png</code>）から問題マスタに自動でつなぎます。何回押しても大丈夫です。</div>
+   <button class="btn primary" data-act="link" ${A.busy?'disabled':''}>${A.busy?'つないでいます…（1分ほどかかります）':'画像をつなぐ'}</button></div>
+   ${k?`<div class="note">問題画像 ${k.problem} 枚、解説・解答画像 ${k.kaisetsu} 枚${k.daihon?`、台本の画像 ${k.daihon} 枚`:''}をつなぎました。${k.fixed?`（こわれていたつなぎを ${k.fixed} 件直しました）`:''}${k.dup?`　同じ名前のファイルが ${k.dup} 枚あったので、新しいほうを使いました。`:''}</div>
+   ${k.missingCount?`<div class="warn">画像がつながっていない問題が ${k.missingCount} あります：${esc(k.missing.join('、'))}${k.missingCount>k.missing.length?' ほか':''}</div>`:''}${k.skipped.length?`<div class="warn">名前の形が合わないのでとばしたファイル：${esc(k.skipped.join('、'))}</div>`:''}`:''}`;
+ }
+ return `<h1>教室長画面</h1>${tabs}${msg}${b}`;
+}
+
+/* ===== v7：画像を押すと、画面いっぱいに大きく見る（数学も英語も） ===== */
+const ZOOMS=[1,1.5,2,3,4];
+function openZoom(src,alt){S.zoom={src,alt,z:1};renderZoom(true)}
+function closeZoom(){S.zoom=null;renderZoom()}
+function zoomBy(d){
+ if(!S.zoom)return;const i=ZOOMS.indexOf(S.zoom.z),n=Math.max(0,Math.min(ZOOMS.length-1,i+d));if(n===i)return;
+ const sc=document.getElementById('zs'),fx=sc?(sc.scrollLeft+sc.clientWidth/2)/Math.max(1,sc.scrollWidth):.5,fy=sc?(sc.scrollTop+sc.clientHeight/2)/Math.max(1,sc.scrollHeight):0;
+ S.zoom.z=ZOOMS[n];renderZoom();
+ const s2=document.getElementById('zs');if(s2){s2.scrollLeft=fx*s2.scrollWidth-s2.clientWidth/2;s2.scrollTop=fy*s2.scrollHeight-s2.clientHeight/2}
+}
+function renderZoom(first){
+ const el=document.getElementById('zoom');if(!el)return;
+ if(!S.zoom){el.hidden=true;el.innerHTML='';document.body.classList.remove('zoomed');return}
+ const z=S.zoom.z;
+ el.innerHTML=`<div class="ztool"><button class="btn" data-act="zoomOut" ${z<=ZOOMS[0]?'disabled':''} aria-label="小さくする">－ 小さく</button><span class="zp">${Math.round(z*100)}%</span>
+  <button class="btn" data-act="zoomIn" ${z>=ZOOMS[ZOOMS.length-1]?'disabled':''} aria-label="大きくする">＋ 大きく</button>
+  <button class="btn primary zc" data-act="zoomClose">とじる ✕</button></div>
+  <div class="zscroll" id="zs"><img src="${esc(S.zoom.src)}" alt="${esc(S.zoom.alt||'')}" style="width:${z*100}%"></div>`;
+ el.hidden=false;document.body.classList.add('zoomed');
+ if(first)el.querySelector('[data-act="zoomClose"]').focus();
+}
+document.addEventListener('dblclick',e=>{if(S.zoom&&e.target.closest('#zs img')){zoomBy(S.zoom.z>1?-ZOOMS.length:2)}});
+
+/* ===== 操作 ===== */
+document.addEventListener('input',e=>{
+ const k=e.target.getAttribute('data-in');if(k){S.form[k]=e.target.value;return}
+ const k2=e.target.getAttribute('data-in2');if(k2)S.adm[k2]=e.target.value;
+});
+document.addEventListener('keydown',e=>{
+ if(S.zoom&&e.key==='Escape'){closeZoom();return}
+ if(e.key==='Enter'&&S.screen==='login'&&e.target.matches('input')){e.preventDefault();doLogin()}});
+document.addEventListener('click',e=>{
+ const im=e.target.closest('.imgbox img');
+ if(im&&!e.target.closest('[data-act]')&&!S.zoom){openZoom(im.src,im.alt);return}
+ const el=e.target.closest('[data-act]');if(!el)return;
+ const a=el.getAttribute('data-act'),v=el.getAttribute('data-v');
+ switch(a){
+  case 'role':S.form.role=v;S.error='';render();break;
+  case 'login':doLogin();break;
+  case 'logout':logout('');break;
+  case 'toMats':if(S.screen==='set')leaveSet();if(S.screen!=='set'){S.screen='mats';render()}break;
+  case 'toSubj':if(S.screen==='set')leaveSet();if(S.screen!=='set'){S.screen='mats';S.subj='';S.mat='';S.sec='';render();scrollTo(0,0)}break;
+  case 'openSubj':S.subj=v;S.screen='mats';render();scrollTo(0,0);break;
+  case 'zoomIn':zoomBy(1);break;
+  case 'zoomOut':zoomBy(-1);break;
+  case 'zoomClose':closeZoom();break;
+  case 'toSec':leaveSet();break;
+  case 'openSec':S.mat=el.dataset.m;S.sec=el.dataset.s;S.screen='sec';S.note='';S.unitOpen=0;S.lvPick='';S.tab=isHonSec()?'unit':'pref';render();scrollTo(0,0);break;
+  case 'tab':S.tab=v;S.note='';render();break;
+  case 'pref':{const p=prefs().find(x=>x.pref===+v);if(p)openSet(sortIds(p.ids),p.name,{tab:'pref'});break}
+  case 'retrySet':{const g=chunk(retryIds(),SET_SIZE)[+v];if(g)openSet(g,'解き直し',{tab:'retry'});break}
+  case 'retryPref':{const ids=retryIds().filter(id=>P(id).pref===+v);if(ids.length)openSet(ids,`解き直し（${P(ids[0]).prefName}）`,{tab:'retry'});break}
+  case 'tagOpen':S.tagOpen=S.tagOpen===v?'':v;render();break;
+  case 'tagSet':{const t=el.dataset.t,ids=sortIds(secProblems().filter(p=>p.tag===t).map(p=>p.id)),g=chunk(ids,SET_SIZE)[+v];if(g)openSet(g,`${t}（${+v*SET_SIZE+1}〜${+v*SET_SIZE+g.length}問目）`,{tab:'tag',tagOpen:t});break}
+  case 'pause':pauseToggle();break;
+  case 'hideTimer':S.set.hide=!S.set.hide;render();break;
+  case 'check':checkAnswers();break;
+  case 'reloadImgs':if(S.set){S.set.ids.forEach(id=>IMGERR.delete(id));startLoad(S.set);render()}break;
+  case 'judge':setJudge(el.dataset.id,v);break;
+  case 'saveSet':saveSet();break;
+  case 'leave':leaveSet();break;
+  case 'leaveForce':leaveSet(true);break;
+  case 'redoNg':{const s=S.set,ids=s.ids.filter(id=>targetsOf(id).some(t=>['△','☓'].includes(s.judges[t])));openSet(ids,s.title+'（△☓）',s.back);break}
+  case 'atab':S.adm.tab=v;S.adm.msg='';S.adm.err='';render();if(v==='st'&&!S.adm.st)loadStudents();break;
+  case 'loadSt':loadStudents();break;
+  case 'stKey':S.adm.stKey=v;render();break;
+  case 'honCheck':S.adm.hparsed=checkHon();S.adm.msg='';S.adm.err='';render();break;
+  case 'honSave':saveHon();break;
+  case 'lvPick':S.lvPick=S.lvPick.includes(v)?S.lvPick.replace(v,''):S.lvPick+v;S.lvPick=LEVELS.filter(l=>S.lvPick.includes(l)).join('');render();break;
+  case 'lvStart':if(S.lvPick){setLevels(S.lvPick);S.tab='unit';render();scrollTo(0,0)}break;
+  case 'lvToggle':{const cur=myLevels()||'';setLevels(cur.includes(v)?cur.replace(v,''):cur+v);render();break}
+  case 'unitOpen':S.unitOpen=+v;render();scrollTo(0,0);break;
+  case 'honSet':case 'honOne':{
+   const k=el.dataset.k,ids=k==='retry'?retryIds():honIds().filter(id=>P(id).unit===S.unitOpen&&inLevels(id));
+   const g=a==='honSet'?chunk(ids,HON_SET)[+v]:[ids[+v]];if(!g||!g[0])break;
+   const u=S.units.find(x=>x.mat===S.mat&&x.sec===S.sec&&x.no===S.unitOpen);
+   const title=k==='retry'?'解き直し':`${u?u.no+'. '+u.name:''}（${g.length>1?P(g[0]).no+'〜'+P(g[g.length-1]).no:P(g[0]).no}番）`;
+   openSet(g,title,{tab:k==='retry'?'retry':'unit',unitOpen:S.unitOpen});break}
+  case 'csvCheck':S.adm.parsed=checkCsv();S.adm.msg='';S.adm.err='';render();break;
+  case 'csvSave':saveCsv();break;
+  case 'link':linkImgs();break;
+  case 'preview':startPreview();break;
+  case 'endPreview':S.preview=false;S.screen='admin';S.set=null;S.note='';S.zoom=null;renderZoom();clearInterval(tickTimer);render();break;
+ }
+});
+window.addEventListener('online',()=>flush());
+boot();
+</script>
+</body>
+</html>
