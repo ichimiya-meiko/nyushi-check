@@ -43,6 +43,8 @@
 - v7〜：英作文の単元（単元名に「英作文」）は、答え合わせのあとに「自分で確かめる3つのポイント」と「迷ったら△にして、先生に見てもらおう」を出す（自分で判定）。
 - v7〜：問題・答えの画像を押すと、画面いっぱいに大きく見られる（数学も。＋／－で 100〜400%、Esc・とじる）。
 
+- v9〜：英語「全国精選2023 ＞ 本冊・公立編」110問（ZE23-H-001〜110、23単元、小問302、レベルなし、マーク66問〔必34・頻36・発20・新9・❗5〕、リスニング1〜13番の音声ページ `…/sound/2023zenkounyu_en/NN/` と台本、案内ページ 2163-0018）。小問は答えの一番上の見出しで数える（一番上が No. や ①② ならそれを数える。(1) の中の ①② は分けない）。
+- v9〜：反映は教室長のパソコンの `%USERPROFILE%\nyushi-check-deploy\nyushi-deploy.ps1`（cowork-deploy.md の手順を PowerShell にしたもの）で `& "$env:USERPROFILE\nyushi-check-deploy\nyushi-deploy.ps1" 番号`。deploy.json と job.json の形は変えない。報告には Cowork への指示文の代わりにこの命令を書く。
 - v8〜：**反映の自動化（Cowork）**。教室長は「ダウンロードフォルダの nyushi-check_vXX.zip を反映してください」と1行送るだけ。Cowork は zip の `docs/cowork-deploy.md` と `deploy.json` のとおりに、GAS（clasp 2.4.2 で push → `clasp deploy -i <今のデプロイID>` で新バージョン。URL は変えない）→ 画像（ドライブ パソコン版の同期フォルダへ robocopy）→ 登録（取り込み待ちフォルダ＋合図）→ 画面（GitHub ichimiya-meiko/nyushi-check に push、GitHub Pages）→ 報告（OK/NG の表）の順に行う。初回の準備は `docs/cowork-setup.md`。
 - v8〜：Cowork の決まり：失敗したら止まって報告／データを消す関数（resetTrial など）・ドライブのファイルの削除・新しいデプロイ・戻す操作は自分でしない（戻す命令は報告に書くだけ）／数学 886問と学習記録を消さない／パスワード・教室コード・PIN・.clasprc.json にふれない／画像・CSV は GitHub に入れない。
 - v8〜：版の zip の形：`index_vXX.html`・`deploy.json`（release・index・gas{file,version} か null・images[{src,dest,files}]・jobs[{job,files}]・repoFiles・commitMessage・newMaterials）・`gas/`・`docs/`・`tools/`・`CLAUDE.md`・`.gitignore`（ここまでが GitHub に入る）・`images/`・`data/`（入れない）・`00_READ_ME_FIRST.md`。
@@ -107,6 +109,7 @@ ping / login / getProblemList（教材つき）/ getProblems（ids、まとめ�
 - **v6**（画面だけ。GAS は v5 のまま）：教材「全国精選2025 ＞ 本冊・公立編」229問（ZS25-H-001〜229、21単元、◎65 ○76 △38 ▲50、小問451、出典 日本教材出版）。本冊の登録で教材名・出典を入れられる。生徒の様子は本冊の教材を切りかえて見る。レベルは教材ごとに、はじめは何も選ばれていない状態から生徒が選ぶ。
 - **v7**（GAS v6）：教科を選ぶ画面（数学・英語）。英語「全国精選2024 ＞ 本冊・公立編」107問（23単元・小問292・レベルなし・マーク43問・リスニング14問の音声ページと台本）。レベルのない教材、英作文の自分で確かめる3つのポイント、画像を押して拡大。本冊の登録に教科・マーク・音声ページ。
 - **v8**（GAS v7）：v7 の中身に、反映の自動化（Cowork の手順書 cowork-deploy.md・初回の準備 cowork-setup.md・deploy.json・取り込み待ちフォルダと runInbox・setup の自動実行・自己点検の報告）を足した。GitHub ichimiya-meiko/nyushi-check と GitHub Pages で公開。
+- **v9**（GAS v7 のまま・gas null）：英語「全国精選2023 ＞ 本冊・公立編」110問。
 - 次：切り出しツール（pdf.js・四角く囲む・拡大プレビュー・番号の自動送り → saveCrop）。
 - v4：講師画面（単元別・県別の ◯△☓、△☓ 一覧）、宿題、生徒の宿題タブ。
 - v5：教室長画面（全生徒の挑戦数・◯ の割合・△☓ の数・宿題の提出状況）。

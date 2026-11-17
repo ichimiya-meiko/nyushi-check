@@ -178,7 +178,7 @@ body.zoomed{overflow:hidden}
 
 <script>
 /* ===== 設定 ===== */
-const VERSION=8;
+const VERSION=9;
 /* この画面が使う GAS の版 */
 const SERVER_VERSION=7;
 /* ↓ GAS を「ウェブアプリ」として公開したときの URL（docs/setup.md 手順7） */
@@ -200,13 +200,14 @@ const LEVELS_KEY='nyushi-check-levels';
 const MAT_DEFAULT={
  ZS27:{name:'全国精選2027',src:'出典：2027年度用 精選 全国高校入試問題集 数学 公立編（〇〇〇〇社）'},
  ZS25:{name:'全国精選2025',src:'出典：2025年度用 精選 全国高校入試問題集 数学 公立編（日本教材出版）'},
- ZE24:{name:'全国精選2024',src:'出典：2024年度用 精選 全国高校入試問題集 英語',subject:'英語'}
+ ZE24:{name:'全国精選2024',src:'出典：2024年度用 精選 全国高校入試問題集 英語',subject:'英語'},
+ ZE23:{name:'全国精選2023',src:'出典：2023年度用 精選 全国高校入試問題集 英語',subject:'英語'}
 };
 /* v7：教科（教材シートの「教科」列。空なら数学）。この順に並べる */
 const SUBJECTS=['数学','英語','理科','社会','国語'];
 const SUBJ_ICON={'数学':'📐','英語':'🔤','理科':'🔬','社会':'🌏','国語':'📖'};
 /* v7：リスニングの音声の案内ページ（教材ごと。1問ずつのページは問題マスタの「音声URL」） */
-const AUDIO_TOP={ZE24:'https://www.edu-files.com/kyozaipage/2163-0019.html'};
+const AUDIO_TOP={ZE24:'https://www.edu-files.com/kyozaipage/2163-0019.html',ZE23:'https://www.edu-files.com/kyozaipage/2163-0018.html'};
 /* v7：英作文（自分で判定する）の単元：単元名にこの文字があれば「自分で確かめる3つのポイント」を出す */
 const SELF_JUDGE_RE=/英作文/;
 const TAGS=['正負の数','文字式','式の計算','一次方程式','連立方程式','比例・反比例','一次関数','平方根','展開・因数分解','二次方程式','関数y=ax²','平面図形・角度','円周角','合同・相似','三平方の定理','空間図形','確率','データの活用','数の性質'];
