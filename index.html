@@ -188,7 +188,7 @@ body.zoomed{overflow:hidden}
 
 <script>
 /* ===== 設定 ===== */
-const VERSION=10;
+const VERSION=11;
 /* この画面が使う GAS の版 */
 const SERVER_VERSION=8;
 /* ↓ GAS を「ウェブアプリ」として公開したときの URL（docs/setup.md 手順7） */
@@ -212,8 +212,12 @@ const MAT_DEFAULT={
  ZS25:{name:'全国精選2025',src:'出典：2025年度用 精選 全国高校入試問題集 数学 公立編（日本教材出版）'},
  ZE24:{name:'全国精選2024',src:'出典：2024年度用 精選 全国高校入試問題集 英語',subject:'英語'},
  ZE23:{name:'全国精選2023',src:'出典：2023年度用 精選 全国高校入試問題集 英語',subject:'英語'},
- ZE3B:{name:'講習テキスト 英語マスター3β',src:'出典：講習テキスト 英語マスター3β（明光義塾）',subject:'英語'}
+ ZE3B:{name:'講習テキスト 英語マスター3β',src:'出典：講習テキスト 英語マスター3β（明光義塾）',subject:'英語'},
+ ZR25:{name:'全国精選2025',src:'出典：2025年度用 精選 全国高校入試問題集 理科',subject:'理科'}
 };
+/* v11：A問題・B問題（単元ごとに、B問題が始まる大問の番号） */
+const AB_START={ZR25:{1:10,2:20,3:30,4:39,5:51,6:62,7:73,8:82,9:91,10:100,11:109,12:118,13:125,14:133}};
+const abOf=p=>{const t=AB_START[p.mat];if(!t||!t[p.unit])return '';return p.no>=t[p.unit]?'B問題':'A問題'};
 /* v10：10段階のレベル（小問ごと。1がやさしく、10がむずかしい） */
 const LV10=[1,2,3,4,5,6,7,8,9,10];
 /* v7：教科（教材シートの「教科」列。空なら数学）。この順に並べる */
@@ -789,7 +793,7 @@ function honCard(id,p,url,a){
  }
  const lastDots=ts.length>1?`<span class="muted">前回</span>${dots(ts)}`:(latestOf(id)?`<span class="pill ${jcls(latestOf(id))}">前回 ${latestOf(id)}</span>`:'');
  return `<section class="qcard${all&&worst?' judged-'+worst:''}" id="q-${id}">
-  <div class="qtop"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level} ${LV_NAME[p.level]||''}</span>`:''}${p.subLv?`<span class="chip">今回やる小問 ${ts.length} / ${targetsOf(id).length}</span>`:ts.length>1?`<span class="chip">小問 ${ts.length}</span>`:''}${lastDots}</div>
+  <div class="qtop"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level} ${LV_NAME[p.level]||''}</span>`:''}${abOf(p)?`<span class="chip">${abOf(p)}</span>`:''}${p.subLv?`<span class="chip">今回やる小問 ${ts.length} / ${targetsOf(id).length}</span>`:ts.length>1?`<span class="chip">小問 ${ts.length}</span>`:''}${lastDots}</div>
   ${audioBar(p)}
   <div class="imgbox">${p.subLv&&url?`<div class="bandwrap">${imgBox(id,`問題${p.no}`)}${bandsOf(p)}</div>`:imgBox(id,`問題${p.no}`)}</div>${lower}</section>`;
 }
@@ -888,7 +892,7 @@ function vHon(){
 const bar2u=ids=>{const n=ids.length||1,d=ids.filter(doneBase).length,g=ids.filter(ngBase).length;return `<div class="bar" aria-hidden="true"><i class="b-ok" style="width:${d/n*100}%"></i><i class="b-ng" style="width:${g/n*100}%"></i></div>`};
 function honList(ids,kind){
  return `<div class="hlist">${ids.map((id,i)=>{const p=P(id),ts=activeTargets(id);
-  return `<button class="hrow" data-act="honOne" data-k="${kind}" data-v="${i}"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level}</span>`:''}${p.audio?'<span class="chip">🔊 リスニング</span>':''}
+  return `<button class="hrow" data-act="honOne" data-k="${kind}" data-v="${i}"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level}</span>`:''}${abOf(p)?`<span class="chip">${abOf(p)}</span>`:''}${p.audio?'<span class="chip">🔊 リスニング</span>':''}
    <span class="muted">${p.subLv?`今回やる小問 ${ts.length} / ${targetsOf(id).length}`:ts.length>1?`小問 ${ts.length}`:'小問なし'}</span>${dots(ts)}${doneBase(id)?'<span class="pill j-ok">ぜんぶ◯</span>':''}</button>`}).join('')}</div>`;
 }
 /* v10：資料のボタン（教材の画像の「資料」） */
