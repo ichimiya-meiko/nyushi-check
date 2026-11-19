@@ -43,6 +43,10 @@
 - v7〜：英作文の単元（単元名に「英作文」）は、答え合わせのあとに「自分で確かめる3つのポイント」と「迷ったら△にして、先生に見てもらおう」を出す（自分で判定）。
 - v7〜：問題・答えの画像を押すと、画面いっぱいに大きく見られる（数学も。＋／－で 100〜400%、Esc・とじる）。
 
+- v10〜：英語「講習テキスト 英語マスター3β ＞ 本冊」354問（ZE3B-H-001〜354、1〜24課、小問1446。明光義塾の講習テキストで、アプリに入れる許可あり）。大問は 例題（課ごとに1つ）・確認問題・基本問題A/B・長文問題A/B・標準問題の番号ごと、実戦編（17〜24課）は ①② ごと。答えと解説は大問ごとに「答え＋解答のヒント・解説（長文は全訳）」を1枚。
+- v10〜：**10段階のレベル（小問ごと。1 やさしい〜10 むずかしい）**。問題マスタの「小問レベル」（例 2,2,3）と「小問位置」（問題画像の中の小問の上の位置 0〜1）。生徒が自分で選ぶ（1つずつ／はばで選ぶ）。選んだレベルの小問がある大問を出し、ほかの小問には帯「今回はやらなくてOK」、◯△☓は選んだ小問だけ。レベル選択シートには 3,4,5 のように記録。実戦編で大問に印が1つの問題は、答えの見出しで小問を数えて全部に同じレベル。
+- v10〜：教材画像シート（教材ID・セクションID・種類〔ポイント・資料〕・番号・画像ID）。ファイル名 `ZE3B-H-U01_point.png`（課のポイント）・`ZE3B-H-S1_shiryo.png`（資料）。getMatImage はログインしてから返す。
+- v10〜：教材の並び順は教室長画面「教材の並び順」と取り込み指示の setOrder（{type:'setOrder', order:['ZE3B-H','ZE24-H','ZE23-H']}）で変えられる。英語は 3β → 全国精選2024 → 全国精選2023。
 - v9〜：英語「全国精選2023 ＞ 本冊・公立編」110問（ZE23-H-001〜110、23単元、小問302、レベルなし、マーク66問〔必34・頻36・発20・新9・❗5〕、リスニング1〜13番の音声ページ `…/sound/2023zenkounyu_en/NN/` と台本、案内ページ 2163-0018）。小問は答えの一番上の見出しで数える（一番上が No. や ①② ならそれを数える。(1) の中の ①② は分けない）。
 - v9〜：反映は教室長のパソコンの `%USERPROFILE%\nyushi-check-deploy\nyushi-deploy.ps1`（cowork-deploy.md の手順を PowerShell にしたもの）で `& "$env:USERPROFILE\nyushi-check-deploy\nyushi-deploy.ps1" 番号`。deploy.json と job.json の形は変えない。報告には Cowork への指示文の代わりにこの命令を書く。
 - v8〜：**反映の自動化（Cowork）**。教室長は「ダウンロードフォルダの nyushi-check_vXX.zip を反映してください」と1行送るだけ。Cowork は zip の `docs/cowork-deploy.md` と `deploy.json` のとおりに、GAS（clasp 2.4.2 で push → `clasp deploy -i <今のデプロイID>` で新バージョン。URL は変えない）→ 画像（ドライブ パソコン版の同期フォルダへ robocopy）→ 登録（取り込み待ちフォルダ＋合図）→ 画面（GitHub ichimiya-meiko/nyushi-check に push、GitHub Pages）→ 報告（OK/NG の表）の順に行う。初回の準備は `docs/cowork-setup.md`。
@@ -69,8 +73,9 @@
 
 | シート | 列 |
 |---|---|
-| 問題マスタ | 問題ID, 都道府県番号, 都道府県, 問題番号, 単元タグ, 問題画像ID, 答え（LaTeX）, 解説画像ID, 配点率, 出題数, 公開, 教材ID, セクションID, AI考え方, AI解き方（改行で行を分ける）, AI確認済み, 単元番号, レベル, 小問数, マーク, 音声URL, 台本画像ID |
+| 問題マスタ | 問題ID, 都道府県番号, 都道府県, 問題番号, 単元タグ, 問題画像ID, 答え（LaTeX）, 解説画像ID, 配点率, 出題数, 公開, 教材ID, セクションID, AI考え方, AI解き方（改行で行を分ける）, AI確認済み, 単元番号, レベル, 小問数, マーク, 音声URL, 台本画像ID, 小問レベル, 小問位置 |
 | 教材 | 教材ID, 教材名, セクションID, セクション名, 並び順, 出典, 教科（空なら数学） |
+| 教材画像 | 教材ID, セクションID, 種類（ポイント・資料）, 番号, 画像ID |
 | 単元 | 教材ID, セクションID, 単元番号, 単元名 |
 | レベル選択 | 生徒ID, 教材ID, セクションID, レベル（例 ◎○）, 更新日時 |
 | 生徒 | 生徒ID, 名前, 学年, PIN, 有効, 担当講師 |
@@ -80,6 +85,10 @@
 | Settings | key, value（classCode, teacherPass, adminPass, sourceText, folderRoot, folderScan, folderProblem, folderKaisetsu, folderInbox, folderDone） |
 
 生徒に出すのは「公開が FALSE でなく、問題画像IDと答えがある」問題だけ。
+
+### GAS API（v8）
+
+v8 で追加：getMatImage（ログイン）・setOrder（教室長）。getProblemList は本冊の問題に subLv・subPos、全体に matImages（ファイルIDなし）。saveLevels は 1〜10 の数も受ける。importHon は subLv・subPos。取り込み指示の steps に setOrder、expect に subLevels・order・matImages。
 
 ### GAS API（v7）
 
@@ -110,6 +119,7 @@ ping / login / getProblemList（教材つき）/ getProblems（ids、まとめ�
 - **v7**（GAS v6）：教科を選ぶ画面（数学・英語）。英語「全国精選2024 ＞ 本冊・公立編」107問（23単元・小問292・レベルなし・マーク43問・リスニング14問の音声ページと台本）。レベルのない教材、英作文の自分で確かめる3つのポイント、画像を押して拡大。本冊の登録に教科・マーク・音声ページ。
 - **v8**（GAS v7）：v7 の中身に、反映の自動化（Cowork の手順書 cowork-deploy.md・初回の準備 cowork-setup.md・deploy.json・取り込み待ちフォルダと runInbox・setup の自動実行・自己点検の報告）を足した。GitHub ichimiya-meiko/nyushi-check と GitHub Pages で公開。
 - **v9**（GAS v7 のまま・gas null）：英語「全国精選2023 ＞ 本冊・公立編」110問。
+- **v10**（GAS v8）：講習テキスト 英語マスター3β 354問・10段階のレベル・ポイントと資料・教材の並び順。
 - 次：切り出しツール（pdf.js・四角く囲む・拡大プレビュー・番号の自動送り → saveCrop）。
 - v4：講師画面（単元別・県別の ◯△☓、△☓ 一覧）、宿題、生徒の宿題タブ。
 - v5：教室長画面（全生徒の挑戦数・◯ の割合・△☓ の数・宿題の提出状況）。

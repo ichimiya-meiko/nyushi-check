@@ -141,6 +141,16 @@ table.tb{width:100%;border-collapse:collapse;font-size:14px;background:var(--pap
 .subj .sl{font-weight:700;min-width:34px}
 .subj .judge{flex:1;min-width:240px}
 .subj .jb{min-height:52px}
+/* v10：10段階のレベル・帯 */
+.lv10{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.l10{min-height:58px;border:2px solid var(--line);border-radius:12px;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px}
+.l10 .ln{font-size:22px;font-weight:700;line-height:1}.l10 .lp{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}.l10 .bar{width:80%;height:5px}
+.l10.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--paper))}.l10.anc{outline:3px dashed var(--accent)}
+.l10:disabled{opacity:.35}
+.bandwrap{position:relative;display:inline-block;max-width:100%}
+.band{position:absolute;left:0;right:0;background:rgba(255,255,255,.8);border-top:1px dashed #9aa6bc;display:flex;align-items:flex-start;justify-content:flex-end;pointer-events:none}
+.band span{font-size:13px;color:#5A6680;background:#fff;border:1px solid #CDD5E1;border-radius:6px;padding:0 6px;margin:2px 4px;font-weight:700}
+.lvn{display:block;font-size:11px;color:var(--sub);font-weight:500;text-align:center}
 /* v7：教科・リスニング・英作文・拡大 */
 .subjc .nm{font-size:22px}
 .audio{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
@@ -178,9 +188,9 @@ body.zoomed{overflow:hidden}
 
 <script>
 /* ===== 設定 ===== */
-const VERSION=9;
+const VERSION=10;
 /* この画面が使う GAS の版 */
-const SERVER_VERSION=7;
+const SERVER_VERSION=8;
 /* ↓ GAS を「ウェブアプリ」として公開したときの URL（docs/setup.md 手順7） */
 const API_URL='https://script.google.com/macros/s/AKfycbxXiXnV1qc8DU4svShC-NjX5jsiEN3395ArYjPIDkHmpNRVRd1Jm_PzPwRl6BHVxqck/exec';
 /* 出典（教材シートの出典 → Settings シートの sourceText → これ の順に使う） */
@@ -201,8 +211,11 @@ const MAT_DEFAULT={
  ZS27:{name:'全国精選2027',src:'出典：2027年度用 精選 全国高校入試問題集 数学 公立編（〇〇〇〇社）'},
  ZS25:{name:'全国精選2025',src:'出典：2025年度用 精選 全国高校入試問題集 数学 公立編（日本教材出版）'},
  ZE24:{name:'全国精選2024',src:'出典：2024年度用 精選 全国高校入試問題集 英語',subject:'英語'},
- ZE23:{name:'全国精選2023',src:'出典：2023年度用 精選 全国高校入試問題集 英語',subject:'英語'}
+ ZE23:{name:'全国精選2023',src:'出典：2023年度用 精選 全国高校入試問題集 英語',subject:'英語'},
+ ZE3B:{name:'講習テキスト 英語マスター3β',src:'出典：講習テキスト 英語マスター3β（明光義塾）',subject:'英語'}
 };
+/* v10：10段階のレベル（小問ごと。1がやさしく、10がむずかしい） */
+const LV10=[1,2,3,4,5,6,7,8,9,10];
 /* v7：教科（教材シートの「教科」列。空なら数学）。この順に並べる */
 const SUBJECTS=['数学','英語','理科','社会','国語'];
 const SUBJ_ICON={'数学':'📐','英語':'🔤','理科':'🔬','社会':'🌏','国語':'📖'};
@@ -250,9 +263,9 @@ async function api(action,payload={},waitMs=60000){
 }
 
 /* ===== 状態 ===== */
-const admInit=()=>({tab:'list',list:null,oldRows:0,csv:'',parsed:null,msg:'',err:'',busy:false,link:null,st:null,stKey:'',hcsv:'',hparsed:null,hmat:'',hsec:'本冊・公立編',hsrc:'',hsubj:'数学'});
+const admInit=()=>({tab:'list',list:null,oldRows:0,csv:'',parsed:null,msg:'',err:'',busy:false,link:null,st:null,stKey:'',hcsv:'',hparsed:null,hmat:'',hsec:'本冊・公立編',hsrc:'',hsubj:'数学',ord:null});
 const S={
- classCode:'',auth:null,subj:'',zoom:null,form:{cc:'',role:'student',sid:'',pin:'',apass:''},
+ classCode:'',auth:null,subj:'',zoom:null,matImages:[],lvRange:false,lvAnchor:0,form:{cc:'',role:'student',sid:'',pin:'',apass:''},
  screen:'login',busy:false,error:'',note:'',verWarn:'',saveWarn:'',
  problems:null,materials:[],source:'',results:{},
  mat:'',sec:'',tab:'pref',tagOpen:'',units:[],levels:{},serverLevels:{},unitOpen:0,lvPick:'',
@@ -279,7 +292,7 @@ const matInfo=()=>S.materials.find(m=>m.mat===S.mat&&m.sec===S.sec)||{matName:S.
 /* 教材の一覧（教科ごと）。教材シートにない問題は、その教材IDの教材として出す */
 function allMats(){
  const out=[];
- S.materials.forEach(m=>{if(!out.find(x=>x.mat===m.mat))out.push({mat:m.mat,matName:m.matName,subject:m.subject||'数学',secs:[]});out.find(x=>x.mat===m.mat).secs.push(m)});
+ [...S.materials].sort((a,b)=>(a.order||0)-(b.order||0)).forEach(m=>{if(!out.find(x=>x.mat===m.mat))out.push({mat:m.mat,matName:m.matName,subject:m.subject||'数学',secs:[]});out.find(x=>x.mat===m.mat).secs.push(m)});
  (S.problems||[]).forEach(p=>{if(!out.find(x=>x.mat===p.mat))out.push({mat:p.mat,matName:p.mat,subject:'数学',secs:[]});const o=out.find(x=>x.mat===p.mat);if(!o.secs.find(s=>s.sec===p.sec))o.secs.push({mat:p.mat,sec:p.sec,secName:p.sec,matName:o.matName,subject:o.subject})});
  /* 問題がない教材（まだ登録だけ）は出さない */
  return out.map(m=>({...m,secs:m.secs.filter(s=>(S.problems||[]).some(p=>p.mat===s.mat&&p.sec===s.sec))})).filter(m=>m.secs.length);
@@ -305,23 +318,30 @@ const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n)
 const isHonSec=()=>secProblems().some(p=>p.hon);
 /* 大問の記録の単位：小問があれば ZS27-H-075-1, -2 …、なければ大問そのもの */
 const targetsOf=id=>{const p=P(id);return p&&p.hon&&p.sub>1?Array.from({length:p.sub},(_,i)=>`${id}-${i+1}`):[id]};
-const allTargets=ids=>ids.flatMap(targetsOf);
+const allTargets=ids=>ids.flatMap(id=>activeTargets(id));
 const subLabel=t=>{const m=/-(\d{1,2})$/.exec(t);return m&&P(t.replace(/-\d{1,2}$/,''))?.hon?`(${m[1]})`:''};
-const doneBase=id=>targetsOf(id).every(t=>latestOf(t)==='◯');
+/* v10：10段階の教材は、選んだレベルの小問だけに◯△☓をつける */
+const is10=()=>honIds().some(id=>P(id).subLv);
+const myNums=()=>String(myLevels()||'').split(',').map(Number).filter(n=>n>=1&&n<=10);
+const subLvOf=t=>{const m=/-(\d{1,2})$/.exec(t),base=m&&P(t.replace(/-\d{1,2}$/,''))?.hon?t.replace(/-\d{1,2}$/,''):t,p=P(base);if(!p||!p.subLv)return 0;return p.subLv[m&&base!==t?+m[1]-1:0]||0};
+const activeTargets=id=>{const p=P(id);if(!p||!p.subLv)return targetsOf(id);const sel=myNums();return targetsOf(id).filter((t,i)=>sel.includes(p.subLv[i]))};
+const doneBase=id=>{const ts=activeTargets(id);return ts.length>0&&ts.every(t=>latestOf(t)==='◯')};
 const ngBase=id=>targetsOf(id).some(t=>['△','☓'].includes(latestOf(t)));
 const secKey=()=>`${S.mat}-${S.sec}`;
 const levelKey=()=>`${LEVELS_KEY}:${S.preview?'preview':S.auth?.studentId||''}`;
 function myLevels(){const v=S.levels[secKey()];return typeof v==='string'?v:null}
 function setLevels(v){
- const lv=LEVELS.filter(l=>v.includes(l)).join('');
+ const lv=is10()?[...new Set(String(v).split(',').map(Number).filter(n=>n>=1&&n<=10))].sort((a,b)=>a-b).join(','):LEVELS.filter(l=>v.includes(l)).join('');
  S.levels[secKey()]=lv;lsSet(levelKey(),S.levels);
  if(!S.preview&&S.auth?.role==='student')api('saveLevels',{mat:S.mat,sec:S.sec,levels:lv}).catch(()=>{});
 }
 const honIds=()=>sortIds(secProblems().filter(p=>p.hon).map(p=>p.id));
 /* v7：レベルのない教材（英語など。選定表がまだ）は、レベルを選ばずに全部の問題を出す */
-const hasLevels=()=>honIds().some(id=>P(id).level);
-const inLevels=id=>{if(!hasLevels())return true;const l=myLevels()||'';return l.includes(P(id)?.level)};
+const hasLevels=()=>honIds().some(id=>P(id).level||P(id).subLv);
+const inLevels=id=>{if(!hasLevels())return true;const p=P(id);if(p?.subLv){const sel=myNums();return p.subLv.some(l=>sel.includes(l))}const l=myLevels()||'';return l.includes(p?.level)};
 function levelProgress(l){const ids=honIds().filter(id=>P(id).level===l);return{done:ids.filter(doneBase).length,total:ids.length}}
+/* v10：10段階のレベルの進み具合（そのレベルの小問のうち、最新が◯の数） */
+function lv10Progress(n){let t=0,d=0;honIds().forEach(id=>{const p=P(id);(p.subLv||[]).forEach((l,i)=>{if(l!==n)return;t++;if(latestOf(targetsOf(id)[i])==='◯')d++})});return{done:d,total:t}}
 
 /* ===== 画像と答え（まとめて受けとり、置き場に入れる。2回目は通信しない） ===== */
 async function toUrl(img){if(!img)return '';const blob=await (await fetch(`data:${img.mime};base64,${img.data}`)).blob();return URL.createObjectURL(blob)}
@@ -456,7 +476,7 @@ async function doLogin(){
 }
 async function loadList(){
  const l=await timed('getProblemList',{});
- setProblems(l.problems);S.materials=l.materials||[];S.units=l.units||[];S.source=l.source||'';
+ setProblems(l.problems);S.materials=l.materials||[];S.units=l.units||[];S.matImages=l.matImages||[];S.source=l.source||'';
  S.levels=lsGet(levelKey())||{};
  if(!S.mat&&subjects().length<=1){const m=mats();if(m.length===1&&m[0].secs.length===1){S.mat=m[0].mat;S.sec=m[0].secs[0].sec}}
 }
@@ -500,6 +520,9 @@ function checkHon(){
  rs.slice(1).forEach((r,i)=>{
   const n=i+2,id=String(r[ix('問題ID')]||'').normalize('NFKC').trim().toUpperCase(),unit=+r[ix('単元番号')],uname=(r[ix('単元名')]||'').trim(),level=hasLv?(r[ix('レベル')]||'').trim():'',sub=+r[ix('小問数')];
   const mk=out.hasMark?(r[ix('マーク')]||'').trim():undefined,au=out.hasAudio?(r[ix('音声ページ')]||'').trim():undefined;
+  const sl=ix('小問レベル')>=0?(r[ix('小問レベル')]||'').trim():undefined,sp=ix('小問位置')>=0?(r[ix('小問位置')]||'').trim():undefined;
+  if(sl){const v=sl.split(/[,、\s]+/).filter(Boolean).map(Number);if(v.length!==sub||v.some(x=>!(x>=1&&x<=10&&Number.isInteger(x))))out.errors.push(`${n}行目：小問レベル「${sl}」は 1〜10 の数を小問の数（${sub}）だけ「,」でつないでください`)}
+  if(sp){const v=sp.split(/[,、\s]+/).filter(Boolean).map(Number);if(v.length!==sub||v.some(x=>!(x>=0&&x<=1)))out.errors.push(`${n}行目：小問位置「${sp}」は 0〜1 の数を小問の数だけ「,」でつないでください`)}
   const m=/^([A-Z0-9]+)-([A-Z0-9]+)-(\d{3})$/.exec(id);
   if(!m)out.errors.push(`${n}行目：問題ID「${id}」の形がちがいます（例 ZS27-H-075）`);
   else if(seen[id])out.errors.push(`${n}行目：問題ID ${id} が2回出ています`);
@@ -508,7 +531,7 @@ function checkHon(){
   if(au&&!/^https:\/\/[^\s"<>]+$/.test(au))out.errors.push(`${n}行目：音声ページは https:// で始まる URL にしてください`);
   if(!(sub>=1&&sub<=20&&Number.isInteger(sub)))out.errors.push(`${n}行目：小問数「${r[ix('小問数')]}」がちがいます（小問がなければ 1）`);
   if(!(unit>=1)||!uname)out.errors.push(`${n}行目：単元番号と単元名を入れてください`);else out.units[unit]=uname;
-  out.items.push({id,unit,level,sub,mark:mk,audio:au,mat:m?m[1]:'',sec:m?m[2]:''});
+  out.items.push({id,unit,level,sub,mark:mk,audio:au,subLv:sl,subPos:sp,mat:m?m[1]:'',sec:m?m[2]:''});
  });
  const lvN=out.items.filter(x=>x.level).length;
  if(lvN&&lvN<out.items.length)out.errors.push(`レベルが入っている行（${lvN}）と空の行（${out.items.length-lvN}）がまざっています。レベルは全部の行に入れるか、全部空にしてください。`);
@@ -523,10 +546,16 @@ async function saveHon(){
  S.adm.busy=true;S.adm.msg='';S.adm.err='';render();
  try{
   const j=await api('importHon',{mat:p.items[0].mat,sec:p.items[0].sec,matName:S.adm.hmat.trim(),secName:S.adm.hsec.trim(),source:S.adm.hsrc.trim(),subject:S.adm.hsubj.trim(),
-   units:Object.entries(p.units).map(([no,name])=>({no:+no,name})),items:p.items.map(({id,unit,level,sub,mark,audio})=>({id,unit,level,sub,mark,audio}))},180000);
+   units:Object.entries(p.units).map(([no,name])=>({no:+no,name})),items:p.items.map(({id,unit,level,sub,mark,audio,subLv,subPos})=>({id,unit,level,sub,mark,audio,subLv,subPos}))},180000);
   S.adm.msg=`保存しました（新しく ${j.added} 問、書きかえ ${j.updated} 問）。`;S.adm.hparsed=null;S.adm.hcsv='';
   await loadAdminList();
  }catch(e){if(e.code==='auth'||e.code==='class')handleError(e);else S.adm.err=e.message}
+ S.adm.busy=false;render();
+}
+async function saveOrder(){
+ S.adm.busy=true;S.adm.msg='';S.adm.err='';render();
+ try{const j=await api('setOrder',{order:S.adm.ord.map(o=>o.key)});S.materials=j.materials||S.materials;S.adm.ord=null;S.adm.msg=`並び順を保存しました（${j.changed}件を入れかえ）。`}
+ catch(e){if(e.code==='auth'||e.code==='class')handleError(e);else S.adm.err=e.message}
  S.adm.busy=false;render();
 }
 async function startPreview(){
@@ -745,7 +774,7 @@ function vSet(){
 
 /* 本冊の大問カード：問題 → 答えと解説（画像）→ 小問ごとに ◯△☓ */
 function honCard(id,p,url,a){
- const s=S.set,ts=targetsOf(id),js=ts.map(t=>s.judges[t]||'');
+ const s=S.set,ts=activeTargets(id),js=ts.map(t=>s.judges[t]||'');
  const worst=js.includes('☓')?'ng':js.includes('△')?'mid':js.every(x=>x==='◯')?'ok':'';
  const all=js.every(Boolean);
  let lower='';
@@ -756,13 +785,30 @@ function honCard(id,p,url,a){
    ${a.dai?`<details class="kai"><summary>放送される英語（台本）を見る</summary><div class="imgbox"><img src="${a.dai}" alt="放送される英語 ${p.no}"></div></details>`:(a.daiErr?`<div class="warn">放送される英語（台本）を読みこめませんでした。${esc(a.daiErr)}</div>`:'')}
    ${selfJudge(p)?`<div class="selfj"><div class="lab">自分で確かめる3つのポイント</div><ol><li>聞かれたことに、ちゃんと答えている？</li><li>語数・文の数は、条件に合っている？</li><li>文法やつづりのまちがいはない？</li></ol><div><b>迷ったら△にして、先生に見てもらおう。</b>答えは「例」なので、ちがう書き方でも正解のことがあります。</div></div>`:''}
    <div class="stack"><div class="lab">自分で判定しよう${ts.length>1?'（小問ごと）':''}</div>${ts.map(t=>{const j=s.judges[t]||'',last=latestOf(t);
-    return `<div class="subj">${ts.length>1?`<span class="sl">${subLabel(t)}</span>`:''}<div class="judge">${Object.keys(JUDGE).map(k=>`<button class="jb ${JUDGE[k].c}" data-act="judge" data-id="${t}" data-v="${k}" aria-pressed="${j===k}" aria-label="${esc(subLabel(t)||'')} ${k}"><span class="s">${k}</span><span class="l">${JUDGE[k].l}</span></button>`).join('')}</div>${last?`<span class="pill ${jcls(last)}">前回 ${last}</span>`:''}</div>`}).join('')}</div>`;
+    return `<div class="subj">${ts.length>1||p.subLv?`<span class="sl">${subLabel(t)||'(1)'}${p.subLv?`<small class="lvn">${subLvOf(t)}</small>`:''}</span>`:''}<div class="judge">${Object.keys(JUDGE).map(k=>`<button class="jb ${JUDGE[k].c}" data-act="judge" data-id="${t}" data-v="${k}" aria-pressed="${j===k}" aria-label="${esc(subLabel(t)||'')} ${k}"><span class="s">${k}</span><span class="l">${JUDGE[k].l}</span></button>`).join('')}</div>${last?`<span class="pill ${jcls(last)}">前回 ${last}</span>`:''}</div>`}).join('')}</div>`;
  }
  const lastDots=ts.length>1?`<span class="muted">前回</span>${dots(ts)}`:(latestOf(id)?`<span class="pill ${jcls(latestOf(id))}">前回 ${latestOf(id)}</span>`:'');
  return `<section class="qcard${all&&worst?' judged-'+worst:''}" id="q-${id}">
-  <div class="qtop"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level} ${LV_NAME[p.level]||''}</span>`:''}${ts.length>1?`<span class="chip">小問 ${ts.length}</span>`:''}${lastDots}</div>
+  <div class="qtop"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level} ${LV_NAME[p.level]||''}</span>`:''}${p.subLv?`<span class="chip">今回やる小問 ${ts.length} / ${targetsOf(id).length}</span>`:ts.length>1?`<span class="chip">小問 ${ts.length}</span>`:''}${lastDots}</div>
   ${audioBar(p)}
-  <div class="imgbox">${imgBox(id,`問題${p.no}`)}</div>${lower}</section>`;
+  <div class="imgbox">${p.subLv&&url?`<div class="bandwrap">${imgBox(id,`問題${p.no}`)}${bandsOf(p)}</div>`:imgBox(id,`問題${p.no}`)}</div>${lower}</section>`;
+}
+
+/* v10：選んでいないレベルの小問の上に、うすい帯と「今回はやらなくてOK」を重ねる */
+function bandsOf(p){
+ if(!p.subPos||!p.subLv)return '';const sel=myNums();
+ return p.subLv.map((l,i)=>{if(sel.includes(l))return '';const t=p.subPos[i]*100,b=(i+1<p.subPos.length?p.subPos[i+1]:1)*100;if(b-t<=0)return '';
+  return `<div class="band" style="top:${t}%;height:${b-t}%"><span>今回はやらなくてOK（レベル${l}）</span></div>`}).join('');
+}
+/* v10：課の「学習のポイント」・資料（教材の画像） */
+const MATIMG=new Map();
+const hasMatImg=(kind,no)=>S.matImages.some(x=>x.mat===S.mat&&x.sec===S.sec&&x.kind===kind&&x.no===no);
+async function openMatImg(kind,no){
+ const k=`${S.mat}-${S.sec}-${kind}-${no}`;
+ if(MATIMG.has(k)){openZoom(MATIMG.get(k),kind+' '+no);return}
+ S.note=`${kind}を読みこんでいます…`;render();
+ try{const j=await api('getMatImage',{mat:S.mat,sec:S.sec,kind,no});const u=await toUrl(j.image);MATIMG.set(k,u);S.note='';render();openZoom(u,kind+' '+no)}
+ catch(e){S.note='';if(e.code==='auth'||e.code==='class')handleError(e);else S.error=e.message;render()}
 }
 
 /* v7：英作文の単元か（自分で判定する問題） */
@@ -775,7 +821,19 @@ function audioBar(p){
 }
 
 /* 本冊：はじめて開いたときのレベル選び（最初の一歩も、生徒が自分で決める） */
+function lv10Buttons(sel,act){
+ return `<div class="lv10">${LV10.map(n=>{const pr=lv10Progress(n);return `<button class="l10${sel.includes(n)?' on':''}${S.lvRange&&S.lvAnchor===n?' anc':''}" data-act="${act}" data-v="${n}" aria-pressed="${sel.includes(n)}" ${pr.total?'':'disabled'}>
+  <span class="ln">${n}</span><span class="lp">${act==='lvPick'?pr.total+'問':pr.done+'/'+pr.total}</span><span class="bar" aria-hidden="true"><i class="b-ok" style="width:${pr.total?pr.done/pr.total*100:0}%"></i></span></button>`}).join('')}</div>
+  <div class="row"><button class="btn small" data-act="lvRange" aria-pressed="${S.lvRange}">${S.lvRange?'はばで選ぶ：はしのレベルを2つ押してね（やめる）':'はばで選ぶ（例 3〜5）'}</button><span class="muted">1 がやさしく、10 がむずかしい</span></div>`;
+}
+const lvText=a=>{a=[...a].sort((x,y)=>x-y);if(!a.length)return '';const out=[];let st=a[0],pv=a[0];for(const n of a.slice(1).concat([99])){if(n!==pv+1){out.push(st===pv?`${st}`:`${st}〜${pv}`);st=n}pv=n}return out.join('・')};
 function vLevelPick(){
+ if(is10()){
+  const sel=String(S.lvPick).split(',').map(Number).filter(Boolean);
+  return `${crumbs()}<div class="card stack"><h1>どのレベルから始める？</h1>
+   <div>自分で決めよう。あとから、いつでも変えられます。いくつ選んでもOKです。</div>${lv10Buttons(sel,'lvPick')}
+   <button class="btn primary big" data-act="lvStart" ${sel.length?'':'disabled'}>${sel.length?`レベル ${lvText(sel)} で はじめる`:'レベルを選んでください'}</button></div>`;
+ }
  const sel=S.lvPick;
  return `${crumbs()}<div class="card stack"><h1>どのレベルから始める？</h1>
   <div>自分で決めよう。あとから、いつでも変えられます。いくつ選んでもOKです。</div>
@@ -795,12 +853,16 @@ function vHon(){
    <span class="lm">${l}</span><span class="ln">${LV_NAME[l]}</span><span class="lp">${pr.done} / ${pr.total}</span>
    <span class="bar" aria-hidden="true"><i class="b-ok" style="width:${pr.total?pr.done/pr.total*100:0}%"></i></span></button>`}).join('')}</div>
   ${nudge(lv)}</div>`;
+ const sel10=is10()?myNums():[];
+ const bar10=`<div class="card stack"><div class="row"><h1 style="margin-right:auto">${esc(matInfo().secName)}</h1>${matDocs()}</div>
+  <div class="muted">レベルを押して、解く小問を選ぼう（いくつ選んでもOK）。選んだレベルの小問がある大問が出ます。</div>
+  ${lv10Buttons(sel10,'lv10Toggle')}${nudge10(sel10)}</div>`;
  const allDone=ids.filter(doneBase).length;
  const bar0=`<div class="card stack"><h1>${esc(matInfo().secName)}</h1>
   <div class="muted">単元を選んで、問題に挑戦しよう。全部の小問が◯になった大問：<b>${allDone}</b> / ${ids.length}</div>
   <div class="bar" aria-hidden="true"><i class="b-ok" style="width:${ids.length?allDone/ids.length*100:0}%"></i></div></div>`;
  const tabs=`<div class="seg" role="tablist"><button data-act="tab" data-v="unit" aria-pressed="${S.tab!=='retry'}">単元</button><button data-act="tab" data-v="retry" aria-pressed="${S.tab==='retry'}">解き直し（${r.length}）</button></div>`;
- const head=`${crumbs()}${S.preview?'<div class="warn">教室長の確認用の画面です。◯△☓を押しても記録しません。</div>':''}${useLv?bar2:bar0}`;
+ const head=`${crumbs()}${S.preview?'<div class="warn">教室長の確認用の画面です。◯△☓を押しても記録しません。</div>':''}${is10()?bar10:useLv?bar2:bar0}`;
  if(useLv&&!lv)return head+`<div class="card">上のレベルを1つ以上押すと、問題が出ます。</div>`;
  let list='';
  if(S.tab==='retry'){
@@ -811,23 +873,31 @@ function vHon(){
   const u=S.units.find(x=>x.mat===S.mat&&x.sec===S.sec&&x.no===S.unitOpen)||{no:S.unitOpen,name:''};
   const us=ids.filter(id=>P(id).unit===u.no&&inLevels(id));
   list=`<div class="row"><button class="lnk" data-act="unitOpen" data-v="0">← 単元の一覧</button></div>
-   <div class="card stack"><h2>${u.no}. ${esc(u.name)}</h2><div class="muted">${useLv?`選んだレベル（${lv}）の問題 ${us.length}問`:`${us.length}問`}</div>
+   <div class="card stack"><div class="row"><h2 style="margin-right:auto">${u.no}. ${esc(u.name)}</h2>${hasMatImg('ポイント',u.no)?`<button class="btn" data-act="matImg" data-k="ポイント" data-v="${u.no}">📘 ポイントを見る</button>`:''}</div><div class="muted">${useLv?`選んだレベル（${is10()?lvText(myNums()):lv}）の問題 ${us.length}問`:`${us.length}問`}</div>
    ${us.length?`<div class="row">${chunk(us,HON_SET).map((g,i)=>`<button class="btn primary" data-act="honSet" data-k="unit" data-v="${i}">${us.length>HON_SET?`まとめて解く ${i*HON_SET+1}〜${i*HON_SET+g.length}問目`:`まとめて解く（${g.length}問）`}</button>`).join('')}</div>`:'<div>この単元には、選んだレベルの問題がありません。上でレベルを足してみよう。</div>'}</div>
    ${honList(us,'one')}`;
  }else{
   const us=S.units.filter(x=>x.mat===S.mat&&x.sec===S.sec);
   list=`<div class="plist">${us.map(u=>{const all=ids.filter(id=>P(id).unit===u.no),mine=all.filter(inLevels),d=mine.filter(doneBase).length;
    return `<button class="pcard" data-act="unitOpen" data-v="${u.no}"><span class="nm">${u.no}. ${esc(u.name)}</span>
-    ${useLv?`<span class="muted">${LEVELS.map(l=>{const n=all.filter(id=>P(id).level===l).length;return n?`${l}${n}`:''}).filter(Boolean).join('　')}</span>`:''}
+    ${useLv&&!is10()?`<span class="muted">${LEVELS.map(l=>{const n=all.filter(id=>P(id).level===l).length;return n?`${l}${n}`:''}).filter(Boolean).join('　')}</span>`:''}
     ${mine.length?`${bar2u(mine)}<span class="muted">${useLv?'選んだレベル ':''}${mine.length}問中 ぜんぶ◯ ${d}問</span>`:'<span class="muted">選んだレベルの問題はありません</span>'}</button>`}).join('')}</div>`;
  }
  return head+tabs+list;
 }
 const bar2u=ids=>{const n=ids.length||1,d=ids.filter(doneBase).length,g=ids.filter(ngBase).length;return `<div class="bar" aria-hidden="true"><i class="b-ok" style="width:${d/n*100}%"></i><i class="b-ng" style="width:${g/n*100}%"></i></div>`};
 function honList(ids,kind){
- return `<div class="hlist">${ids.map((id,i)=>{const p=P(id),ts=targetsOf(id);
+ return `<div class="hlist">${ids.map((id,i)=>{const p=P(id),ts=activeTargets(id);
   return `<button class="hrow" data-act="honOne" data-k="${kind}" data-v="${i}"><span class="no">${p.no}</span>${p.level?`<span class="lvb lv${LEVELS.indexOf(p.level)}">${p.level}</span>`:''}${p.audio?'<span class="chip">🔊 リスニング</span>':''}
-   <span class="muted">${ts.length>1?`小問 ${ts.length}`:'小問なし'}</span>${dots(ts)}${doneBase(id)?'<span class="pill j-ok">ぜんぶ◯</span>':''}</button>`}).join('')}</div>`;
+   <span class="muted">${p.subLv?`今回やる小問 ${ts.length} / ${targetsOf(id).length}`:ts.length>1?`小問 ${ts.length}`:'小問なし'}</span>${dots(ts)}${doneBase(id)?'<span class="pill j-ok">ぜんぶ◯</span>':''}</button>`}).join('')}</div>`;
+}
+/* v10：資料のボタン（教材の画像の「資料」） */
+function matDocs(){const d=S.matImages.filter(x=>x.mat===S.mat&&x.sec===S.sec&&x.kind==='資料');return d.length?`<div class="row">${d.map(x=>`<button class="btn small" data-act="matImg" data-k="資料" data-v="${x.no}">📄 資料${x.no}</button>`).join('')}</div>`:''}
+/* v10：10段階のやさしい声かけ（選んだレベルが8割ほど進み、すぐ上のレベルをまだ選んでいないとき） */
+function nudge10(sel){
+ const top=Math.max(0,...sel);if(!top||top>=10||sel.includes(top+1))return '';
+ const pr=lv10Progress(top);
+ return pr.total&&pr.done/pr.total>=0.8?`<div class="note">レベル${top}が ${pr.done}/${pr.total} まで来たね。準備ができたら、次のレベル（${top+1}）にも進んでみよう。</div>`:'';
 }
 /* やさしい声かけ：選んだレベルがほぼ終わっていて、次のレベルをまだ選んでいないとき */
 function nudge(lv){
@@ -846,7 +916,8 @@ function vAdmin(){
   <button data-act="atab" data-v="list" aria-pressed="${A.tab==='list'}">問題の一覧</button>
   <button data-act="atab" data-v="csv" aria-pressed="${A.tab==='csv'}">答えの一括登録</button>
   <button data-act="atab" data-v="hon" aria-pressed="${A.tab==='hon'}">本冊の登録</button>
-  <button data-act="atab" data-v="link" aria-pressed="${A.tab==='link'}">画像の自動登録</button></div>`;
+  <button data-act="atab" data-v="link" aria-pressed="${A.tab==='link'}">画像の自動登録</button>
+  <button data-act="atab" data-v="ord" aria-pressed="${A.tab==='ord'}">教材の並び順</button></div>`;
  const msg=(A.err?`<div class="err">${esc(A.err)}</div>`:'')+(A.msg?`<div class="note">${esc(A.msg)}</div>`:'')+(A.oldRows?`<div class="warn">試作（43-01 の形）の行が ${A.oldRows} 行残っています。Apps Script のエディタで resetTrial を1回実行してください（docs/setup.md）。</div>`:'');
  let b='';
  if(A.tab==='list'){
@@ -860,7 +931,7 @@ function vAdmin(){
     <button class="btn primary" data-act="preview" style="margin-left:auto" ${S.busy?'disabled':''}>生徒画面で確かめる</button></div></div>
     <div class="tbw"><table class="tb"><thead><tr><th>教材</th><th>都道府県・単元</th><th>問題</th><th>画像</th><th>答え</th><th>教材の解説</th><th>AI解説</th><th>生徒に出る</th><th>配点率・レベル</th><th>出題数・小問</th></tr></thead><tbody>
     ${[...g.values()].map(o=>{const n=o.items.length,c=f=>o.items.filter(f).length,ok=(v,m)=>v===m?`<span class="y">${v}</span>`:`<span class="n">${v}</span>`;
-     return `<tr><td>${esc(o.mat)}-${esc(o.sec)}</td><td>${esc(o.name)}</td><td>${n}</td><td>${ok(c(x=>x.hasImage),n)}</td><td>${o.hon?'（画像）':ok(c(x=>x.latex),n)}</td><td>${o.hon?ok(c(x=>x.hasKaisetsu),n):c(x=>x.hasKaisetsu)}</td><td>${o.hon?'—':c(x=>x.hasAI)}</td><td>${ok(c(x=>x.ready),n)}</td><td>${o.hon?(c(x=>x.level)?LEVELS.map(l=>{const k=c(x=>x.level===l);return k?l+k:''}).join(' '):'<span class="muted">レベルなし</span>')+(c(x=>x.mark)?`<br><span class="muted">マーク ${c(x=>x.mark)}問</span>`:''):esc(o.rate)}</td><td>${o.hon?o.items.reduce((a,x)=>a+x.sub,0)+(c(x=>x.audio)?`<br><span class="muted">音声 ${c(x=>x.audio)}・台本 ${ok(c(x=>x.hasDaihon),c(x=>x.audio))}</span>`:''):esc(o.count)}</td></tr>`}).join('')}
+     return `<tr><td>${esc(o.mat)}-${esc(o.sec)}</td><td>${esc(o.name)}</td><td>${n}</td><td>${ok(c(x=>x.hasImage),n)}</td><td>${o.hon?'（画像）':ok(c(x=>x.latex),n)}</td><td>${o.hon?ok(c(x=>x.hasKaisetsu),n):c(x=>x.hasKaisetsu)}</td><td>${o.hon?'—':c(x=>x.hasAI)}</td><td>${ok(c(x=>x.ready),n)}</td><td>${o.hon?(c(x=>x.subLv)?'10段階 '+LV10.map(n=>{const k=o.items.reduce((a,x)=>a+(x.subLv||[]).filter(v=>v===n).length,0);return k?n+':'+k:''}).filter(Boolean).join(' '):c(x=>x.level)?LEVELS.map(l=>{const k=c(x=>x.level===l);return k?l+k:''}).join(' '):'<span class="muted">レベルなし</span>')+(c(x=>x.mark)?`<br><span class="muted">マーク ${c(x=>x.mark)}問</span>`:''):esc(o.rate)}</td><td>${o.hon?o.items.reduce((a,x)=>a+x.sub,0)+(c(x=>x.audio)?`<br><span class="muted">音声 ${c(x=>x.audio)}・台本 ${ok(c(x=>x.hasDaihon),c(x=>x.audio))}</span>`:''):esc(o.count)}</td></tr>`}).join('')}
     </tbody></table></div>`;
   }
  }else if(A.tab==='st'){
@@ -871,7 +942,7 @@ function vAdmin(){
    const key=all.some(m=>m.mat+'-'+m.sec===A.stKey)?A.stKey:(all[0]?all[0].mat+'-'+all[0].sec:'');
    const hs=all.filter(m=>m.mat+'-'+m.sec===key);
    /* v7：レベルなしの教材は「全部」の1列 */
-   const lvCols=m=>{const t=d.totals[m.mat+'-'+m.sec]||{};const ls=LEVELS.filter(l=>t[l]);if(t['']||!ls.length)ls.push('');return ls};
+   const lvCols=m=>{const t=d.totals[m.mat+'-'+m.sec]||{};const nums=LV10.map(String).filter(l=>t[l]);if(nums.length)return nums;const ls=LEVELS.filter(l=>t[l]);if(t['']||!ls.length)ls.push('');return ls};
    b=`${all.length>1?`<div class="seg" role="tablist" aria-label="本冊の教材">${all.map(m=>`<button data-act="stKey" data-v="${esc(m.mat+'-'+m.sec)}" aria-pressed="${m.mat+'-'+m.sec===key}">${esc(m.matName)} ${esc(m.secName)}</button>`).join('')}</div>`:''}
     <div class="card stack"><div class="muted">見るだけの画面です。レベルは生徒が自分で選びます（こちらから変えることはできません）。数は小問ごとの最新の判定です。</div>
     <div class="row"><button class="btn small" data-act="loadSt">読みこみ直す</button></div></div>
@@ -882,9 +953,16 @@ function vAdmin(){
      <td>${esc((st.last||'').slice(5,16))}</td></tr>`).join('')}
     </tbody></table></div>`;
   }
+ }else if(A.tab==='ord'){
+  if(!A.ord)A.ord=[...S.materials].sort((a,b)=>(a.order||0)-(b.order||0)).map(m=>({key:m.mat+'-'+m.sec,name:`${m.matName} ＞ ${m.secName}`,subject:m.subject||'数学'}));
+  const subs=[...new Set(A.ord.map(o=>o.subject))];
+  b=`<div class="card stack"><div>生徒の画面で、教材が上から並ぶ順番です（教科ごと）。↑↓ で入れかえて「保存する」を押してください。</div>
+   ${subs.map(sj=>`<div class="stack"><h2>${esc(sj)}</h2>${A.ord.map((o,i)=>o.subject!==sj?'':`<div class="hrow"><span style="margin-right:auto">${esc(o.name)}</span>
+    <button class="btn small" data-act="ordUp" data-v="${i}" aria-label="上へ">↑</button><button class="btn small" data-act="ordDn" data-v="${i}" aria-label="下へ">↓</button></div>`).join('')}</div>`).join('')}
+   <button class="btn primary" data-act="ordSave" ${A.busy?'disabled':''}>${A.busy?'保存しています…':'保存する'}</button></div>`;
  }else if(A.tab==='hon'){
   const p=A.hparsed;
-  b=`<div class="card stack"><div>本冊の問題を登録します。<code>ZS27_honsatsu.csv</code>・<code>ZE24_honsatsu.csv</code> などをメモ帳で開き、全部コピーして貼ってください（見出し：<code>問題ID,単元番号,単元名,小問数</code> は必ず。<code>レベル</code>・<code>マーク</code>・<code>音声ページ</code> はあれば）。答えは画像なので、ここでは入れません（「画像の自動登録」でつなぎます）。</div>
+  b=`<div class="card stack"><div>本冊の問題を登録します。<code>ZS27_honsatsu.csv</code>・<code>ZE24_honsatsu.csv</code>・<code>ZE3B_honsatsu.csv</code> などをメモ帳で開き、全部コピーして貼ってください（見出し：<code>問題ID,単元番号,単元名,小問数</code> は必ず。<code>レベル</code>・<code>マーク</code>・<code>音声ページ</code>・<code>小問レベル</code>・<code>小問位置</code> はあれば）。答えは画像なので、ここでは入れません（「画像の自動登録」でつなぎます）。</div>
    <div class="muted">レベルが空の教材（英語など）は、生徒はレベルを選ばずに全部の問題を解けます。あとで選定表ができたら、レベルを入れた同じ CSV を貼って保存すると、生徒が選ぶレベルに切りかわります（記録はそのまま）。</div>
    ${p&&!p.errors.length?`<div class="row"><label class="muted">教科 <select class="t" data-in2="hsubj" style="max-width:120px;min-height:40px;font-size:15px">${SUBJECTS.map(x=>`<option${x===A.hsubj?' selected':''}>${x}</option>`).join('')}</select></label>
    <label class="muted">教材名 <input class="t" data-in2="hmat" value="${esc(A.hmat)}" style="max-width:220px;min-height:40px;font-size:15px"></label>
@@ -893,7 +971,7 @@ function vAdmin(){
    <textarea class="t" data-in2="hcsv" spellcheck="false" placeholder="問題ID,単元番号,単元名,小問数,マーク,レベル,音声ページ">${esc(A.hcsv)}</textarea>
    <div class="row"><button class="btn" data-act="honCheck">確かめる</button>
    <button class="btn primary" data-act="honSave" ${!p||p.errors.length||!p.items.length||A.busy?'disabled':''}>${A.busy?'保存しています…':'保存する'}</button></div></div>
-   ${p?(p.errors.length?`<div class="err">まちがいがあるので、保存できません。\n${esc(p.errors.slice(0,30).join('\n'))}</div>`:`<div class="note">${p.items.length}問（単元 ${Object.keys(p.units).length}・小問 ${p.items.reduce((a,x)=>a+x.sub,0)}）、まちがいはありません。　${p.items.some(x=>x.level)?LEVELS.map(l=>`${l} ${p.items.filter(x=>x.level===l).length}`).join('　'):'レベルなし（生徒は全部の問題を解けます）'}${p.hasMark?`　マーク ${p.items.filter(x=>x.mark).length}問`:''}${p.hasAudio?`　音声ページ ${p.items.filter(x=>x.audio).length}問`:''}</div>`):''}`;
+   ${p?(p.errors.length?`<div class="err">まちがいがあるので、保存できません。\n${esc(p.errors.slice(0,30).join('\n'))}</div>`:`<div class="note">${p.items.length}問（単元 ${Object.keys(p.units).length}・小問 ${p.items.reduce((a,x)=>a+x.sub,0)}）、まちがいはありません。　${p.items.some(x=>x.subLv)?'10段階（小問ごと） '+LV10.map(n=>`${n}:${p.items.reduce((a,x)=>a+(x.subLv||'').split(',').filter(v=>+v===n).length,0)}`).join(' '):p.items.some(x=>x.level)?LEVELS.map(l=>`${l} ${p.items.filter(x=>x.level===l).length}`).join('　'):'レベルなし（生徒は全部の問題を解けます）'}${p.hasMark?`　マーク ${p.items.filter(x=>x.mark).length}問`:''}${p.hasAudio?`　音声ページ ${p.items.filter(x=>x.audio).length}問`:''}</div>`):''}`;
  }else if(A.tab==='csv'){
   const p=A.parsed;
   b=`<div class="card stack"><div>1行目に見出し（<code>問題ID,単元タグ,答えLaTeX,配点率,出題数,AI考え方,AI解き方</code>。<code>公開</code> も使えます）、2行目から1問ずつ。Claude からもらった <code>ZS27_answers.csv</code> をテキストで開き、全部コピーして貼ってください。</div>
@@ -906,9 +984,9 @@ function vAdmin(){
    </tbody></table></div>`:''}`;
  }else{
   const k=A.link;
-  b=`<div class="card stack"><div>ドライブの <b>入試問題チェック ＞ 問題画像</b> に、画像を入れてから押してください（フォルダごと入れても大丈夫です）。ファイル名（例 <code>ZS27-K-43-03.png</code>・<code>ZS27-K-43-03_kaisetsu.png</code>、本冊は <code>ZS27-H-075.png</code>・<code>ZS27-H-075_kaitou.png</code>、リスニングの台本は <code>ZE24-H-001_daihon.png</code>）から問題マスタに自動でつなぎます。何回押しても大丈夫です。</div>
+  b=`<div class="card stack"><div>ドライブの <b>入試問題チェック ＞ 問題画像</b> に、画像を入れてから押してください（フォルダごと入れても大丈夫です）。ファイル名（例 <code>ZS27-K-43-03.png</code>・<code>ZS27-K-43-03_kaisetsu.png</code>、本冊は <code>ZS27-H-075.png</code>・<code>ZS27-H-075_kaitou.png</code>、リスニングの台本は <code>ZE24-H-001_daihon.png</code>、課のポイント・資料は <code>ZE3B-H-U01_point.png</code>・<code>ZE3B-H-S1_shiryo.png</code>）から問題マスタに自動でつなぎます。何回押しても大丈夫です。</div>
    <button class="btn primary" data-act="link" ${A.busy?'disabled':''}>${A.busy?'つないでいます…（1分ほどかかります）':'画像をつなぐ'}</button></div>
-   ${k?`<div class="note">問題画像 ${k.problem} 枚、解説・解答画像 ${k.kaisetsu} 枚${k.daihon?`、台本の画像 ${k.daihon} 枚`:''}をつなぎました。${k.fixed?`（こわれていたつなぎを ${k.fixed} 件直しました）`:''}${k.dup?`　同じ名前のファイルが ${k.dup} 枚あったので、新しいほうを使いました。`:''}</div>
+   ${k?`<div class="note">問題画像 ${k.problem} 枚、解説・解答画像 ${k.kaisetsu} 枚${k.daihon?`、台本の画像 ${k.daihon} 枚`:''}${k.matImage?`、ポイント・資料 ${k.matImage} 枚`:''}をつなぎました。${k.fixed?`（こわれていたつなぎを ${k.fixed} 件直しました）`:''}${k.dup?`　同じ名前のファイルが ${k.dup} 枚あったので、新しいほうを使いました。`:''}</div>
    ${k.missingCount?`<div class="warn">画像がつながっていない問題が ${k.missingCount} あります：${esc(k.missing.join('、'))}${k.missingCount>k.missing.length?' ほか':''}</div>`:''}${k.skipped.length?`<div class="warn">名前の形が合わないのでとばしたファイル：${esc(k.skipped.join('、'))}</div>`:''}`:''}`;
  }
  return `<h1>教室長画面</h1>${tabs}${msg}${b}`;
@@ -976,13 +1054,25 @@ document.addEventListener('click',e=>{
   case 'saveSet':saveSet();break;
   case 'leave':leaveSet();break;
   case 'leaveForce':leaveSet(true);break;
-  case 'redoNg':{const s=S.set,ids=s.ids.filter(id=>targetsOf(id).some(t=>['△','☓'].includes(s.judges[t])));openSet(ids,s.title+'（△☓）',s.back);break}
+  case 'redoNg':{const s=S.set,ids=s.ids.filter(id=>activeTargets(id).some(t=>['△','☓'].includes(s.judges[t])));openSet(ids,s.title+'（△☓）',s.back);break}
   case 'atab':S.adm.tab=v;S.adm.msg='';S.adm.err='';render();if(v==='st'&&!S.adm.st)loadStudents();break;
   case 'loadSt':loadStudents();break;
   case 'stKey':S.adm.stKey=v;render();break;
   case 'honCheck':S.adm.hparsed=checkHon();S.adm.msg='';S.adm.err='';render();break;
   case 'honSave':saveHon();break;
-  case 'lvPick':S.lvPick=S.lvPick.includes(v)?S.lvPick.replace(v,''):S.lvPick+v;S.lvPick=LEVELS.filter(l=>S.lvPick.includes(l)).join('');render();break;
+  case 'lvRange':S.lvRange=!S.lvRange;S.lvAnchor=0;render();break;
+  case 'matImg':openMatImg(el.dataset.k,+v);break;
+  case 'ordUp':case 'ordDn':{const o=S.adm.ord,i=+v,j=a==='ordUp'?i-1:i+1;if(o&&o[j]&&o[i].subject===o[j].subject){[o[i],o[j]]=[o[j],o[i]];render()}break}
+  case 'ordSave':saveOrder();break;
+  case 'lv10Toggle':{let cur=myNums();const n=+v;
+   if(S.lvRange){if(!S.lvAnchor){S.lvAnchor=n;render();break}const a=Math.min(S.lvAnchor,n),b=Math.max(S.lvAnchor,n);cur=LV10.filter(x=>x>=a&&x<=b&&lv10Progress(x).total);S.lvRange=false;S.lvAnchor=0}
+   else cur=cur.includes(n)?cur.filter(x=>x!==n):cur.concat([n]);
+   setLevels(cur.join(','));render();break}
+  case 'lvPick':if(is10()){let cur=String(S.lvPick).split(',').map(Number).filter(Boolean);const n=+v;
+   if(S.lvRange){if(!S.lvAnchor){S.lvAnchor=n;render();break}const a2=Math.min(S.lvAnchor,n),b2=Math.max(S.lvAnchor,n);cur=LV10.filter(x=>x>=a2&&x<=b2&&lv10Progress(x).total);S.lvRange=false;S.lvAnchor=0}
+   else cur=cur.includes(n)?cur.filter(x=>x!==n):cur.concat([n]);
+   S.lvPick=cur.sort((x,y)=>x-y).join(',');render();break}
+   S.lvPick=S.lvPick.includes(v)?S.lvPick.replace(v,''):S.lvPick+v;S.lvPick=LEVELS.filter(l=>S.lvPick.includes(l)).join('');render();break;
   case 'lvStart':if(S.lvPick){setLevels(S.lvPick);S.tab='unit';render();scrollTo(0,0)}break;
   case 'lvToggle':{const cur=myLevels()||'';setLevels(cur.includes(v)?cur.replace(v,''):cur+v);render();break}
   case 'unitOpen':S.unitOpen=+v;render();scrollTo(0,0);break;

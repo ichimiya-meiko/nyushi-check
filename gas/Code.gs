@@ -1,5 +1,8 @@
 /**
  * 入試問題チェック（nyushi-check） GAS バックエンド
+ * v8（10段階のレベル：問題マスタの「小問レベル」（例 2,2,3）と「小問位置」（画像の中の小問の上の位置。0〜1）。レベル選択は 1〜10 の数（例 3,4,5）も記録。
+ *     教材の画像（課ごとの「学習のポイント」・資料。教材画像シート）と getMatImage（ログインしてから返す）。教材の並び順（setOrder・取り込みの setOrder）。
+ *     生徒の様子は 10段階の教材を小問のレベルごとに数える。自己点検に subLevels・order）
  * v7（反映の自動化：版が上がったら setup を自動で1回だけ実行。ドライブの「取り込み待ち」に置かれた取り込み指示（*.job.json）と CSV を、
  *     合図（runInbox。パスワード不要・短い間に何度も来たら断る）で処理し、本冊の登録 → 画像をつなぐ → 自己点検 をして、
  *     報告を「取り込み済み」に書く。データを消す処理はしない）
@@ -22,16 +25,17 @@
  * ・パスワードは Settings にハッシュ（SHA-256）で置く。平文で書かれていたら、次に使うときにハッシュにして平文を消す。
  */
 
-const VERSION = 7;
+const VERSION = 8;
 const TZ = 'Asia/Tokyo';
 
 /* シートと見出し。生徒シートの A〜E 列は、本文分析ノートの Students シートと同じ並び（そのまま貼れる） */
 const SHEETS = {
   '問題マスタ': ['問題ID', '都道府県番号', '都道府県', '問題番号', '単元タグ', '問題画像ID', '答え（LaTeX）', '解説画像ID', '配点率', '出題数', '公開',
-    '教材ID', 'セクションID', 'AI考え方', 'AI解き方', 'AI確認済み', '単元番号', 'レベル', '小問数', 'マーク', '音声URL', '台本画像ID'],
+    '教材ID', 'セクションID', 'AI考え方', 'AI解き方', 'AI確認済み', '単元番号', 'レベル', '小問数', 'マーク', '音声URL', '台本画像ID', '小問レベル', '小問位置'],
   '単元': ['教材ID', 'セクションID', '単元番号', '単元名'],
   'レベル選択': ['生徒ID', '教材ID', 'セクションID', 'レベル', '更新日時'],
   '教材': ['教材ID', '教材名', 'セクションID', 'セクション名', '並び順', '出典', '教科'],
+  '教材画像': ['教材ID', 'セクションID', '種類', '番号', '画像ID'],
   '生徒': ['生徒ID', '名前', '学年', 'PIN', '有効', '担当講師'],
   '講師': ['講師ID', '名前', '有効'],
   '学習記録': ['記録ID', '日時', '生徒ID', '問題ID', '判定', '何回目', 'セッションID', '経過秒'],
@@ -90,6 +94,8 @@ const ACTIONS = {
   getProblemList: { role: ['student', 'teacher', 'admin'], fn: getProblemList },
   getProblems: { role: ['student', 'teacher', 'admin'], fn: getProblems },
   getAnswers: { role: ['student', 'teacher', 'admin'], fn: getAnswers },
+  getMatImage: { role: ['student', 'teacher', 'admin'], fn: getMatImage },
+  setOrder: { role: 'admin', fn: req => withLock(() => setOrderCore(req.order)) },
   saveResults: { role: 'student', fn: saveResults },
   saveLevels: { role: 'student', fn: saveLevels },
   adminStudents: { role: 'admin', fn: adminStudents },
@@ -522,10 +528,12 @@ function getProblemList(req) {
       o.hon = true; o.unit = Number(r['単元番号']) || 0; o.level = String(r['レベル']).trim(); o.sub = Number(r['小問数']) || 1;
       const au = String(r['音声URL'] || '').trim();
       if (/^https:\/\//.test(au)) o.audio = au;  // リスニングの音声ページ（教材会社の公開ページ）
+      const sl = subLevelsOf(r);
+      if (sl) { o.subLv = sl; o.subPos = subPosOf(r, sl.length); }  // v8：10段階のレベル（小問ごと）
     }
     return o;
   }).sort((a, b) => (a.id < b.id ? -1 : 1));
-  return { problems: list, materials: materials(), units: units(), source: getSetting('sourceText') };
+  return { problems: list, materials: materials(), units: units(), matImages: matImageList(), source: getSetting('sourceText') };
 }
 
 /** 問題画像をまとめて返す（県ごとの問題用紙を1回の通信で開くため） */
@@ -624,7 +632,11 @@ function saveLevels(req) {
   const sid = req.who.id;
   const mat = String(req.mat || '').trim().toUpperCase(), sec = String(req.sec || '').trim().toUpperCase();
   if (!/^[A-Z0-9]+$/.test(mat) || !/^[A-Z0-9]+$/.test(sec)) throw userError('教材がちがいます。');
-  const lv = LEVELS.filter(l => String(req.levels || '').indexOf(l) >= 0).join('');
+  const raw = String(req.levels || '');
+  // v8：10段階の教材は 1〜10 の数を「,」でつないで記録する（例 3,4,5）
+  const lv = /\d/.test(raw)
+    ? raw.split(/[^\d]+/).map(Number).filter(n => n >= 1 && n <= 10).filter((n, i, a) => a.indexOf(n) === i).sort((a, b) => a - b).join(',')
+    : LEVELS.filter(l => raw.indexOf(l) >= 0).join('');
   return withLock(() => {
     const r = rows('レベル選択').find(x => String(x['生徒ID']).trim() === sid && String(x['教材ID']).trim().toUpperCase() === mat && String(x['セクションID']).trim().toUpperCase() === sec);
     const obj = { '生徒ID': sid, '教材ID': mat, 'セクションID': sec, 'レベル': lv, '更新日時': stamp() };
@@ -637,7 +649,7 @@ function saveLevels(req) {
 
 function adminStudents() {
   const prob = {};
-  problemRows().forEach(r => { const id = normId(r['問題ID']); prob[id] = { p: parseId(id), level: String(r['レベル']).trim(), sub: Number(r['小問数']) || 1 }; });
+  problemRows().forEach(r => { const id = normId(r['問題ID']); prob[id] = { p: parseId(id), level: String(r['レベル']).trim(), sub: Number(r['小問数']) || 1, subLv: subLevelsOf(r) }; });
   const latest = {};
   rows('学習記録').forEach(x => {
     const sid = String(x['生徒ID']).trim(), pid = normId(x['問題ID']);
@@ -664,7 +676,8 @@ function adminStudents() {
     if (!b) return;
     const key = p.mat + '-' + p.sec;
     const h = o.hon[key] || (o.hon[key] = {});
-    const lv = h[b.level] || (h[b.level] = { '◯': 0, '△': 0, '☓': 0 });
+    const lk = b.subLv ? String(b.subLv[Math.max(0, (p.sub || 1) - 1)] || '') : b.level;  // v8：10段階は小問のレベル
+    const lv = h[lk] || (h[lk] = { '◯': 0, '△': 0, '☓': 0 });
     lv[x.judge]++;
   });
   const totals = {};
@@ -673,7 +686,8 @@ function adminStudents() {
     if (!b.p.hon) return;
     const key = b.p.mat + '-' + b.p.sec;
     const t = totals[key] || (totals[key] = {});
-    t[b.level] = (t[b.level] || 0) + b.sub;
+    if (b.subLv) b.subLv.forEach(l => { t[String(l)] = (t[String(l)] || 0) + 1; });
+    else t[b.level] = (t[b.level] || 0) + b.sub;
   });
   return { students: Object.keys(st).map(k => st[k]), totals: totals, materials: materials() };
 }
@@ -701,11 +715,22 @@ function importHon(req) {
     const level = String(it.level || '').trim(), sub = Number(it.sub), unit = Number(it.unit);
     const mark = it.mark === undefined || it.mark === null ? undefined : String(it.mark).trim().slice(0, 80);
     const audio = it.audio === undefined || it.audio === null ? undefined : String(it.audio).trim();
+    // v8：小問レベル（1〜10 を小問の数だけ「,」でつなぐ）と小問位置（0〜1）
+    const subLv = it.subLv === undefined || it.subLv === null ? undefined : String(it.subLv).trim();
+    const subPos = it.subPos === undefined || it.subPos === null ? undefined : String(it.subPos).trim();
+    if (subLv) {
+      const a = subLv.split(/[,、\s]+/).filter(Boolean).map(Number);
+      if (a.length !== Number(it.sub) || a.some(v => !(v >= 1 && v <= 10 && Math.floor(v) === v))) errors.push(`${n}行目：小問レベル「${subLv}」は 1〜10 の数を小問の数（${it.sub}）だけ「,」でつないでください。`);
+    }
+    if (subPos) {
+      const a = subPos.split(/[,、\s]+/).filter(Boolean).map(Number);
+      if (a.length !== Number(it.sub) || a.some(v => !(v >= 0 && v <= 1))) errors.push(`${n}行目：小問位置「${subPos}」は 0〜1 の数を小問の数だけ「,」でつないでください。`);
+    }
     if (level && LEVELS.indexOf(level) < 0) errors.push(`${n}行目：レベル「${level}」は ◎ ○ △ ▲ のどれかです（レベルなしの教材は空のまま）。`);
     if (audio && !/^https:\/\/[^\s"<>]+$/.test(audio)) errors.push(`${n}行目：音声ページ「${audio}」は https:// で始まる URL にしてください。`);
     if (!(sub >= 1 && sub <= 20 && Math.floor(sub) === sub)) errors.push(`${n}行目：小問数「${it.sub}」がちがいます（小問がなければ 1）。`);
     if (!unitNos[unit]) errors.push(`${n}行目：単元番号「${it.unit}」に単元名がありません。`);
-    return { id, level, sub, unit, mark, audio };
+    return { id, level, sub, unit, mark, audio, subLv, subPos };
   });
   const withLv = clean.filter(x => x.level).length;
   if (withLv && withLv < clean.length) errors.push(`レベルが入っている行（${withLv}）と空の行（${clean.length - withLv}）がまざっています。レベルは全部の行に入れるか、全部空にしてください。`);
@@ -732,6 +757,8 @@ function importHon(req) {
         m.set(e.row, '単元番号', it.unit); m.set(e.row, 'レベル', it.level); m.set(e.row, '小問数', it.sub);
         if (it.mark !== undefined) m.set(e.row, 'マーク', it.mark);
         if (it.audio !== undefined) m.set(e.row, '音声URL', it.audio);
+        if (it.subLv !== undefined) m.set(e.row, '小問レベル', it.subLv.split(/[,、\s]+/).filter(Boolean).join(','));
+        if (it.subPos !== undefined) m.set(e.row, '小問位置', it.subPos.split(/[,、\s]+/).filter(Boolean).join(','));
         if (e.added) added++; else updated++;
       });
       return { added, updated };
@@ -768,7 +795,7 @@ function adminProblems() {
       published: isActive(r['公開']),
       ready: isReady(r),
       hon: !!p.hon, unit: Number(r['単元番号']) || 0, level: String(r['レベル']).trim(), sub: Number(r['小問数']) || 1,
-      mark: String(r['マーク'] || '').trim(), audio: !!String(r['音声URL'] || '').trim(), hasDaihon: !!String(r['台本画像ID'] || '').trim()
+      mark: String(r['マーク'] || '').trim(), audio: !!String(r['音声URL'] || '').trim(), hasDaihon: !!String(r['台本画像ID'] || '').trim(), subLv: subLevelsOf(r)
     };
   }).sort((a, b) => (a.id < b.id ? -1 : 1));
   const old = rows('問題マスタ').filter(r => OLD_ID_RE.test(String(r['問題ID']).trim())).length;
@@ -888,13 +915,20 @@ function linkImages() {
 
 function linkImagesCore() {
   const res = withLock(() => editMaster(m => {
-    const res = { problem: 0, kaisetsu: 0, daihon: 0, skipped: [], fixed: 0, dup: 0, missing: [] };
-    const seen = {}, pick = {};
+    const res = { problem: 0, kaisetsu: 0, daihon: 0, matImage: 0, skipped: [], fixed: 0, dup: 0, missing: [] };
+    const seen = {}, pick = {}, mpick = {};
+    const mre = /^([A-Za-z0-9]+)-([A-Za-z0-9]+)-([US])(\d{1,2})_(point|shiryo)\.(png|jpe?g|webp)$/i;
     const re = /^([A-Za-z0-9]+-[A-Za-z0-9]+-(?:\d{2}-\d{2}|\d{3}))(_kaisetsu|_kaitou|_daihon)?\.(png|jpe?g|webp|gif)$/i;
     ['folderProblem', 'folderKaisetsu'].forEach(key => {
       eachFile(folder(key), f => {
         if (seen[f.getId()]) return;
         seen[f.getId()] = true;
+        const mh = mre.exec(f.getName().normalize('NFKC'));
+        if (mh) {  // v8：教材の画像（ZE3B-H-U01_point.png・ZE3B-H-S1_shiryo.png）
+          const mk = [mh[1].toUpperCase(), mh[2].toUpperCase(), mh[5].toLowerCase() === 'point' ? 'ポイント' : '資料', String(Number(mh[4]))].join('|');
+          if (mpick[mk]) { res.dup++; if (f.getLastUpdated() <= mpick[mk].getLastUpdated()) return; }
+          mpick[mk] = f; return;
+        }
         const hit = re.exec(f.getName().normalize('NFKC'));
         const pid = hit ? normId(hit[1]) : '';
         const pp = pid ? parseId(pid) : null;
@@ -911,8 +945,20 @@ function linkImagesCore() {
       m.set(e.row, col, pick[key].getId());
       if (col === '解説画像ID') res.kaisetsu++; else if (col === '台本画像ID') res.daihon++; else res.problem++;
     });
+    res.mpick = mpick;
     return res;
   }));
+  if (Object.keys(res.mpick).length) withLock(() => {
+    const list = rows('教材画像');
+    Object.keys(res.mpick).forEach(mk => {
+      const [mat, sec, kind, no] = mk.split('|'), id = res.mpick[mk].getId();
+      const r = list.find(x => String(x['教材ID']).trim().toUpperCase() === mat && String(x['セクションID']).trim().toUpperCase() === sec && String(x['種類']).trim() === kind && String(Number(x['番号'])) === no);
+      const obj = { '教材ID': mat, 'セクションID': sec, '種類': kind, '番号': no, '画像ID': id };
+      if (r) { if (String(r['画像ID']).trim() !== id) { res.fixed++; updateObj('教材画像', r, obj); } } else appendObj('教材画像', obj);
+      res.matImage++;
+    });
+  });
+  delete res.mpick;
   MEMO = {};
   const miss = missingImages();
   res.missing = miss.slice(0, 50);
@@ -1050,7 +1096,7 @@ function setup() {
       appendObj('生徒', { '生徒ID': id, '名前': name, '学年': grade, 'PIN': pin, '有効': 'TRUE', '担当講師': '' }));
   }
   if (rows('講師').length === 0) appendObj('講師', { '講師ID': 'K01', '名前': 'テスト先生', '有効': 'TRUE' });
-  console.log('準備ができました（v7）。問題マスタに「マーク・音声URL・台本画像ID」の列、教材シートに「教科」の列、ドライブに「取り込み待ち」「取り込み済み」フォルダを足しました（教科が空の教材は数学です）。入っているデータはそのままです。');
+  console.log('準備ができました（v8）。問題マスタに「小問レベル・小問位置」の列、「教材画像」シートを足しました。問題マスタに「マーク・音声URL・台本画像ID」の列、教材シートに「教科」の列、ドライブに「取り込み待ち」「取り込み済み」フォルダを足しました（教科が空の教材は数学です）。入っているデータはそのままです。');
 }
 
 /* ===== v7：版が上がったら setup を自動で1回だけ実行する ===== */
@@ -1090,7 +1136,7 @@ function pingInfo() {
 
 const INBOX_GAP_SEC = 20;      // 合図と合図のあいだは 20 秒以上
 const INBOX_PER_HOUR = 40;     // 1時間に 40 回まで
-const JOB_STEPS = ['importHon', 'linkImages'];  // 取り込み指示でできるのはこれだけ（消す処理はない）
+const JOB_STEPS = ['importHon', 'linkImages', 'setOrder'];  // 取り込み指示でできるのはこれだけ（消す処理はない）
 
 function runInbox() {
   const c = CacheService.getScriptCache(), now = Date.now();
@@ -1160,9 +1206,12 @@ function processInbox() {
         const csv = csvFiles.find(f => f.getName().normalize('NFKC') === String(st.csv).normalize('NFKC'));
         const r = importHon(honReqFromCsv(st, fileText(csv)));
         report.steps.push({ type: st.type, csv: st.csv, added: r.added, updated: r.updated });
+      } else if (st.type === 'setOrder') {
+        const r = withLock(() => setOrderCore(st.order));
+        report.steps.push({ type: st.type, changed: r.changed });
       } else if (st.type === 'linkImages') {
         const r = linkImagesCore();
-        report.steps.push({ type: st.type, problem: r.problem, kaisetsu: r.kaisetsu, daihon: r.daihon, fixed: r.fixed, dup: r.dup, missingCount: r.missingCount, missing: r.missing.slice(0, 20), skipped: r.skipped.slice(0, 20) });
+        report.steps.push({ type: st.type, problem: r.problem, kaisetsu: r.kaisetsu, daihon: r.daihon, matImage: r.matImage, fixed: r.fixed, dup: r.dup, missingCount: r.missingCount, missing: r.missing.slice(0, 20), skipped: r.skipped.slice(0, 20) });
       }
       MEMO = {};
     }
@@ -1215,7 +1264,7 @@ function honReqFromCsv(st, text) {
   rs.slice(1).forEach(r => {
     const g = k => (ix(k) < 0 ? undefined : String(r[ix(k)] === undefined ? '' : r[ix(k)]).trim());
     units[g('単元番号')] = g('単元名');
-    items.push({ id: g('問題ID'), unit: g('単元番号'), sub: g('小問数'), level: g('レベル') || '', mark: g('マーク'), audio: g('音声ページ') });
+    items.push({ id: g('問題ID'), unit: g('単元番号'), sub: g('小問数'), level: g('レベル') || '', mark: g('マーク'), audio: g('音声ページ'), subLv: g('小問レベル'), subPos: g('小問位置') });
   });
   return {
     mat: st.mat, sec: st.sec, matName: st.matName, secName: st.secName, source: st.source, subject: st.subject,
@@ -1286,6 +1335,21 @@ function selfCheck(expect, before) {
       add(`${label}（${k}）`, v === want, `${v}（期待 ${want}）`);
     });
   });
+  // v8：小問レベル（教材-セクション → {レベル: 小問の数}）・教材の並び順・教材の画像の数
+  Object.keys(expect.subLevels || {}).forEach(k => {
+    const want = expect.subLevels[k], cnt = {};
+    problemRows().forEach(r => { const p = parseId(normId(r['問題ID'])); if (p.mat + '-' + p.sec !== k) return; (subLevelsOf(r) || []).forEach(l => { cnt[l] = (cnt[l] || 0) + 1; }); });
+    const ok = Object.keys(want).every(l => Number(cnt[l] || 0) === Number(want[l])) && Object.keys(cnt).every(l => want[l] !== undefined);
+    add(`小問のレベル（${k}）`, ok, Object.keys(cnt).sort((a, b) => a - b).map(l => `${l}:${cnt[l]}`).join(' ') + `（期待 ${Object.keys(want).map(l => l + ':' + want[l]).join(' ')}）`);
+  });
+  if (Array.isArray(expect.order) && expect.order.length) {
+    const ms = materials(), pos = expect.order.map(k => ms.findIndex(m => m.mat + '-' + m.sec === k));
+    add('教材の並び順', pos.every(x => x >= 0) && pos.every((x, i) => i === 0 || x > pos[i - 1]), expect.order.join(' → ') + `（いまの順 ${pos.join(',')}）`);
+  }
+  Object.keys(expect.matImages || {}).forEach(k => {
+    const n = matImageList().filter(x => x.mat + '-' + x.sec === k).length;
+    add(`教材の画像（${k}）`, n === Number(expect.matImages[k]), `${n}（期待 ${expect.matImages[k]}）`);
+  });
   const miss = missingImages();
   if (expect.missingImages !== undefined) add('つながっていない画像', miss.length <= Number(expect.missingImages), miss.length ? `${miss.length}：${miss.slice(0, 10).join('、')}` : 'なし');
   const recs = rows('学習記録').length;
@@ -1310,4 +1374,50 @@ function selfCheck(expect, before) {
     add(`画像が読めるか（${id}）`, !errs.length, `${got.join('・') || '—'}${errs.length ? '／' + errs.join('・') : ''}（${Date.now() - t} ms）`);
   });
   return out;
+}
+
+/* ===== v8：10段階のレベル・教材の画像・教材の並び順 ===== */
+
+/** 問題マスタの行の小問レベル（[2,2,3] など）。なければ null */
+function subLevelsOf(r) {
+  const s = String(r['小問レベル'] || '').trim();
+  if (!s) return null;
+  const a = s.split(',').map(Number).filter(n => n >= 1 && n <= 10);
+  return a.length ? a : null;
+}
+
+function subPosOf(r, n) {
+  const a = String(r['小問位置'] || '').split(',').map(Number).filter(v => v >= 0 && v <= 1);
+  return a.length === n ? a : null;
+}
+
+/** 教材の画像の一覧（ファイルIDは返さない） */
+function matImageList() {
+  return rows('教材画像').filter(r => String(r['画像ID']).trim()).map(r => ({
+    mat: String(r['教材ID']).trim().toUpperCase(), sec: String(r['セクションID']).trim().toUpperCase(), kind: String(r['種類']).trim(), no: Number(r['番号']) || 0
+  })).sort((a, b) => (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : a.no - b.no));
+}
+
+/** 教材の画像（学習のポイント・資料）を1枚返す */
+function getMatImage(req) {
+  const mat = String(req.mat || '').toUpperCase(), sec = String(req.sec || '').toUpperCase(), kind = String(req.kind || ''), no = Number(req.no) || 0;
+  const r = rows('教材画像').find(x => String(x['教材ID']).trim().toUpperCase() === mat && String(x['セクションID']).trim().toUpperCase() === sec && String(x['種類']).trim() === kind && Number(x['番号']) === no);
+  if (!r) throw userError('この画像はまだ登録されていません。');
+  try { return { image: imageOf(r['画像ID']) }; } catch (e) { throw userError('画像のファイルがドライブで見つかりません。教室長画面の「画像の自動登録」で「画像をつなぐ」を押してください。'); }
+}
+
+/**
+ * 教材の並び順を書きかえる。order：['ZE3B-H', 'ZE24-H', 'ZE23-H'] のような教材-セクションの並び。
+ * 書いた教材は、その中で今いちばん小さい並び順から順に入れなおす（ほかの教材の並び順は変えない）。消す処理はない。
+ */
+function setOrderCore(order) {
+  const keys = (Array.isArray(order) ? order : []).map(k => String(k).toUpperCase()).filter(k => /^[A-Z0-9]+-[A-Z0-9]+$/.test(k));
+  if (!keys.length) throw userError('並び順が空です。');
+  const list = rows('教材');
+  const rs = keys.map(k => list.find(r => String(r['教材ID']).trim().toUpperCase() + '-' + String(r['セクションID']).trim().toUpperCase() === k));
+  if (rs.some(r => !r)) throw userError('教材シートにない教材があります：' + keys.filter((k, i) => !rs[i]).join('、'));
+  const slots = rs.map(r => Number(r['並び順']) || 0).sort((a, b) => a - b);
+  let changed = 0;
+  rs.forEach((r, i) => { if (Number(r['並び順']) !== slots[i]) { updateObj('教材', r, { '並び順': String(slots[i]) }); changed++; } });
+  return { changed, materials: materials() };
 }

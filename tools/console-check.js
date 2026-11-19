@@ -1,5 +1,5 @@
 /*
- * 入試問題チェック 動作確認スクリプト（v9 用。サーバー（GAS）は v7 のまま）
+ * 入試問題チェック 動作確認スクリプト（v10 用。サーバー（GAS）は v8）
  *
  * 使い方
  *   1. Chrome で入試問題チェックを開き、ログインする（教室長でも、テスト生徒 T01 でもよい）。
@@ -22,6 +22,7 @@
  *   ・v4：本冊（241問・21単元・レベル ◎85 ○63 △44 ▲49・小問468）がそろっているか。1番の問題と答え・解説の画像がとどくか
  *   ・v6：全国精選2025 本冊・公立編（229問・21単元・レベル ◎65 ○76 △38 ▲50・小問451）がそろっているか。229番の画像がとどくか
  *   ・v5：本冊の1単元ぶん（26〜30番）の画像が、理由つきで全部とどくか（とどかない問題があれば、その理由を出す）
+ *   ・v10：講習テキスト 英語マスター3β（354問・24課・小問1446・10段階のレベル・ポイントと資料の画像20）。英語の並びが 3β → 全国精選2024 → 全国精選2023 か
  *   ・v9：英語 全国精選2023 本冊・公立編（110問・23単元・小問302・レベルなし・音声13）。1番の問題・答えと解説・台本がとどくか
  *   ・v8：GAS が setup を自動で実行したか（ping の setup が GAS の版と同じか）
  *   ・v7：教科（数学・英語）がそろっているか。英語 全国精選2024 本冊・公立編（107問・23単元・小問292・レベルなし・リスニングの音声14）。
@@ -40,7 +41,7 @@
     if (typeof S === 'undefined' || typeof api !== 'function') { console.error('入試問題チェックの画面で実行してください。'); return; }
     if (!S.auth) { console.error('先にログインしてください。'); return; }
     const role = S.auth.role;
-    add('画面の版', VERSION === 9, `index.html v${VERSION}（GAS v${SERVER_VERSION} 用）／ ${role === 'admin' ? '教室長' : '生徒 ' + S.auth.studentId} でログイン中`);
+    add('画面の版', VERSION === 10, `index.html v${VERSION}（GAS v${SERVER_VERSION} 用）／ ${role === 'admin' ? '教室長' : '生徒 ' + S.auth.studentId} でログイン中`);
     const saved = lsGet(LOGIN_KEY) || {};
     add('ログインを覚えている', !!(saved.auth && saved.auth.token && saved.classCode), saved.auth && saved.auth.token ? '次から自動で入ります' : 'この端末には覚えていません');
 
@@ -120,6 +121,21 @@
       } catch (e) { add('英語2023 1番（リスニング）', false, e.message); }
     }
 
+    /* v10：講習テキスト 英語マスター3β */
+    const b3 = list.problems.filter(p => p.mat === 'ZE3B' && p.sec === 'H');
+    const b3Sub = b3.reduce((a, p) => a + (p.sub || 1), 0), b3Lv = b3.filter(p => Array.isArray(p.subLv) && p.subLv.length === p.sub).length;
+    add('3β 本冊', b3.length === 354 && new Set(b3.map(p => p.unit)).size === 24 && b3Sub === 1446 && b3Lv === 354,
+      `${b3.length} 問・${new Set(b3.map(p => p.unit)).size} 課・小問 ${b3Sub}・小問レベルあり ${b3Lv}（354問・24課・小問1446ならそろっています）`);
+    const mi = (list.matImages || []).filter(x => x.mat === 'ZE3B');
+    add('3β のポイント・資料', mi.length === 20, `ポイント ${mi.filter(x => x.kind === 'ポイント').length}・資料 ${mi.filter(x => x.kind === '資料').length}（16・4）`);
+    const enOrd = list.materials.filter(m => m.subject === '英語').sort((a, b) => a.order - b.order).map(m => m.mat);
+    add('英語の並び順', enOrd.slice(0, 3).join(',') === 'ZE3B,ZE24,ZE23', enOrd.join(' → '));
+    if (b3.length) {
+      t = t0();
+      try { const j = await api('getMatImage', { mat: 'ZE3B', sec: 'H', kind: 'ポイント', no: 1 }); add('3β 1課のポイント', !!j.image, `とどきました（${ms(t)} ms）`); }
+      catch (e) { add('3β 1課のポイント', false, e.message); }
+    }
+
     const u3 = h.filter(p => p.no >= 26 && p.no <= 30).map(p => p.id);
     if (u3.length) {
       u3.forEach(id => { if (!IMG.get(id)) IMGERR.delete(id); });
@@ -165,7 +181,7 @@
       t = t0();
       const a = await api('adminProblems');
       const c = f => a.problems.filter(f).length;
-      add('教室長の問題一覧', c(p => p.ready) === 416 + 241 + 229 + 107 + 110, `（416 + 241 + 229 + 107 + 110 = 1103 なら全部）登録 ${a.problems.length}／生徒に出る ${c(p => p.ready)}／問題画像 ${c(p => p.hasImage)}／教材の解説 ${c(p => p.hasKaisetsu)}／AI解説 ${c(p => p.hasAI)}（${ms(t)} ms）`);
+      add('教室長の問題一覧', c(p => p.ready) === 416 + 241 + 229 + 107 + 110 + 354, `（416 + 241 + 229 + 107 + 110 + 354 = 1457 なら全部）登録 ${a.problems.length}／生徒に出る ${c(p => p.ready)}／問題画像 ${c(p => p.hasImage)}／教材の解説 ${c(p => p.hasKaisetsu)}／AI解説 ${c(p => p.hasAI)}（${ms(t)} ms）`);
       add('英語の台本・マーク', c(p => p.hasDaihon) === 27 && c(p => p.mat === 'ZE24' && p.mark) === 43 && c(p => p.mat === 'ZE23' && p.mark) === 66, `台本の画像 ${c(p => p.hasDaihon)}（14 + 13 = 27）／マークのある問題 2024 ${c(p => p.mat === 'ZE24' && p.mark)}（43）・2023 ${c(p => p.mat === 'ZE23' && p.mark)}（66）`);
       try { t = t0(); const st = await api('adminStudents'); add('生徒の様子', true, `${st.students.length} 人（${ms(t)} ms）`); } catch (e) { add('生徒の様子', false, e.message); }
       add('試作の行', !a.oldRows, a.oldRows ? `${a.oldRows} 行残っています（resetTrial を実行してください）` : '残っていません');
