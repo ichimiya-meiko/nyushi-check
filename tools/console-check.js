@@ -1,5 +1,5 @@
 /*
- * 入試問題チェック 動作確認スクリプト（v11 用。サーバー（GAS）は v8）
+ * 入試問題チェック 動作確認スクリプト（v12 用。サーバー（GAS）は v8）
  *
  * 使い方
  *   1. Chrome で入試問題チェックを開き、ログインする（教室長でも、テスト生徒 T01 でもよい）。
@@ -22,6 +22,7 @@
  *   ・v4：本冊（241問・21単元・レベル ◎85 ○63 △44 ▲49・小問468）がそろっているか。1番の問題と答え・解説の画像がとどくか
  *   ・v6：全国精選2025 本冊・公立編（229問・21単元・レベル ◎65 ○76 △38 ▲50・小問451）がそろっているか。229番の画像がとどくか
  *   ・v5：本冊の1単元ぶん（26〜30番）の画像が、理由つきで全部とどくか（とどかない問題があれば、その理由を出す）
+ *   ・v12：社会 全国精選2025 本冊・公立編（135問・19単元・小問263・レベルなし）。1番と135番の問題・答えと解説の画像がとどくか。差しかえた画像（数学2025 195番・3β 45番）がとどくか
  *   ・v11：理科 全国精選2025 本冊・公立編（136問・14単元・小問394・レベルなし・A問題/B問題）。1番と136番の問題・答えと解説の画像がとどくか
  *   ・v10：講習テキスト 英語マスター3β（354問・24課・小問1446・10段階のレベル・ポイントと資料の画像20）。英語の並びが 3β → 全国精選2024 → 全国精選2023 か
  *   ・v9：英語 全国精選2023 本冊・公立編（110問・23単元・小問302・レベルなし・音声13）。1番の問題・答えと解説・台本がとどくか
@@ -42,7 +43,7 @@
     if (typeof S === 'undefined' || typeof api !== 'function') { console.error('入試問題チェックの画面で実行してください。'); return; }
     if (!S.auth) { console.error('先にログインしてください。'); return; }
     const role = S.auth.role;
-    add('画面の版', VERSION === 11, `index.html v${VERSION}（GAS v${SERVER_VERSION} 用）／ ${role === 'admin' ? '教室長' : '生徒 ' + S.auth.studentId} でログイン中`);
+    add('画面の版', VERSION === 12, `index.html v${VERSION}（GAS v${SERVER_VERSION} 用）／ ${role === 'admin' ? '教室長' : '生徒 ' + S.auth.studentId} でログイン中`);
     const saved = lsGet(LOGIN_KEY) || {};
     add('ログインを覚えている', !!(saved.auth && saved.auth.token && saved.classCode), saved.auth && saved.auth.token ? '次から自動で入ります' : 'この端末には覚えていません');
 
@@ -89,7 +90,7 @@
 
     /* v7：教科と英語 */
     const subj = [...new Set(list.materials.map(m => m.subject || '数学'))];
-    add('教科', subj.includes('数学') && subj.includes('英語') && subj.includes('理科'), `${subj.join('・')}（数学・英語・理科があれば OK）`);
+    add('教科', ['数学', '英語', '理科', '社会'].every(x => subj.includes(x)), `${subj.join('・')}（数学・英語・理科・社会があれば OK）`);
     const en = list.problems.filter(p => p.mat === 'ZE24' && p.sec === 'H');
     const enSub = en.reduce((a, p) => a + (p.sub || 1), 0), enLv = en.filter(p => p.level).length, enAu = en.filter(p => p.audio).length;
     add('英語 全国精選2024 本冊', en.length === 107 && new Set(en.map(p => p.unit)).size === 23 && enSub === 292 && enLv === 0 && enAu === 14,
@@ -156,6 +157,24 @@
       } catch (e) { add('理科 1番・136番の画像', false, e.message); }
     }
 
+    /* v12：社会 全国精選2025 */
+    const c5 = list.problems.filter(p => p.mat === 'ZC25' && p.sec === 'H');
+    const c5Sub = c5.reduce((a, p) => a + (p.sub || 1), 0);
+    add('社会 全国精選2025 本冊', c5.length === 135 && new Set(c5.map(p => p.unit)).size === 19 && c5Sub === 263 && !c5.some(p => p.level),
+      `${c5.length} 問・${new Set(c5.map(p => p.unit)).size} 単元・小問 ${c5Sub}・レベル ${c5.some(p => p.level) ? 'あり' : 'なし'}（135問・19単元・小問263・レベルなし ならそろっています）`);
+    const mc = list.materials.find(m => m.mat === 'ZC25');
+    add('社会の教材', !!mc && mc.subject === '社会', mc ? `教科 ${mc.subject}・${mc.matName} ＞ ${mc.secName}・${mc.source}` : '教材シートにありません');
+    const cIds = c5.filter(p => p.no === 1 || p.no === 135).map(p => p.id).concat(list.problems.filter(p => p.id === 'ZS25-H-195' || p.id === 'ZE3B-H-045').map(p => p.id));
+    if (cIds.length) {
+      t = t0();
+      try {
+        cIds.forEach(id => { if (!IMG.get(id)) IMGERR.delete(id); });
+        await loadImages(cIds); const a = await api('getAnswers', { ids: cIds });
+        const ok = cIds.every(id => IMG.get(id)) && a.answers.length === cIds.length && a.answers.every(x => x.kaisetsu);
+        add('社会 1番・135番と差しかえた画像', ok, cIds.map(id => `${id}：問題 ${IMG.get(id) ? 'あり' : 'なし（' + (IMGERR.get(id) || '') + '）'}・答えと解説 ${(a.answers.find(x => x.id === id) || {}).kaisetsu ? 'あり' : 'なし'}`).join(' ／ ') + `（${ms(t)} ms）`);
+      } catch (e) { add('社会 1番・135番と差しかえた画像', false, e.message); }
+    }
+
     const u3 = h.filter(p => p.no >= 26 && p.no <= 30).map(p => p.id);
     if (u3.length) {
       u3.forEach(id => { if (!IMG.get(id)) IMGERR.delete(id); });
@@ -201,7 +220,7 @@
       t = t0();
       const a = await api('adminProblems');
       const c = f => a.problems.filter(f).length;
-      add('教室長の問題一覧', c(p => p.ready) === 416 + 241 + 229 + 107 + 110 + 354 + 136, `（416 + 241 + 229 + 107 + 110 + 354 + 136 = 1593 なら全部）登録 ${a.problems.length}／生徒に出る ${c(p => p.ready)}／問題画像 ${c(p => p.hasImage)}／教材の解説 ${c(p => p.hasKaisetsu)}／AI解説 ${c(p => p.hasAI)}（${ms(t)} ms）`);
+      add('教室長の問題一覧', c(p => p.ready) === 416 + 241 + 229 + 107 + 110 + 354 + 136 + 135, `（416 + 241 + 229 + 107 + 110 + 354 + 136 + 135 = 1728 なら全部）登録 ${a.problems.length}／生徒に出る ${c(p => p.ready)}／問題画像 ${c(p => p.hasImage)}／教材の解説 ${c(p => p.hasKaisetsu)}／AI解説 ${c(p => p.hasAI)}（${ms(t)} ms）`);
       add('英語の台本・マーク', c(p => p.hasDaihon) === 27 && c(p => p.mat === 'ZE24' && p.mark) === 43 && c(p => p.mat === 'ZE23' && p.mark) === 66, `台本の画像 ${c(p => p.hasDaihon)}（14 + 13 = 27）／マークのある問題 2024 ${c(p => p.mat === 'ZE24' && p.mark)}（43）・2023 ${c(p => p.mat === 'ZE23' && p.mark)}（66）`);
       try { t = t0(); const st = await api('adminStudents'); add('生徒の様子', true, `${st.students.length} 人（${ms(t)} ms）`); } catch (e) { add('生徒の様子', false, e.message); }
       add('試作の行', !a.oldRows, a.oldRows ? `${a.oldRows} 行残っています（resetTrial を実行してください）` : '残っていません');
